@@ -15,7 +15,6 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 
-sys.path.append(os.path.dirname(__file__))
 from rplidar_ros.msg import AxLaserScan
 from sensor_hub_client.msg import MockRobotState
 from sensor_hub_client.msg import MockRobotControl

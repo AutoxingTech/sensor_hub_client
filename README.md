@@ -4,12 +4,8 @@
 启动方法参考：
 
 ```
-cd /home/liudf/ax/rplidar_ws
-source install/setup.bash
-
-cd /home/liudf/ax/sensor_client_ws
-source install/setup.bash
-
-rosrun sensor_hub_client sensor_hub_client.py
+source /home/aoting/rplidar_ws/install/setup.bash
+source /home/aoting/sensor_hub_client/install/setup.bash
+rosrun sensor_hub_client client.py
 
 ```

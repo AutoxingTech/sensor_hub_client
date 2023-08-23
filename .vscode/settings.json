@@ -95,6 +95,11 @@
         "nsec",
         "Odometry",
         "rospy",
-        "rplidar"
+        "rplidar",
+        "rosrun"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/../../devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages",
     ],
 }

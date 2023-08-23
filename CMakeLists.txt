@@ -11,19 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   cln_msgs
 )
 
-add_message_files(
-  DIRECTORY msgs
-  FILES MockRobotState.msg MockRobotControl.msg
-)
+add_message_files(DIRECTORY msgs FILES MockRobotState.msg MockRobotControl.msg)
 
-generate_messages(
-  DEPENDENCIES
-    geometry_msgs
-    std_msgs
-)
+generate_messages(DEPENDENCIES geometry_msgs std_msgs)
 
-catkin_package(
-  CATKIN_DEPENDS message_runtime std_msgs
-)
+catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
 
 catkin_install_python(PROGRAMS client.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
