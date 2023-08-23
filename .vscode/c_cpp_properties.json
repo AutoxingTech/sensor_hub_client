@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "name": "ROS",
+            "defines": [],
+        }
+    ],
+    "version": 4
+}
