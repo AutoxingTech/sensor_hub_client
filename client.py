@@ -102,7 +102,7 @@ class SensorHubClient:
         rospy.loginfo_throttle(10, "__imu_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
-        self.__send_to_server(b"\xAB\xCD", buff.getvalue(), set_length=True)
+        self.__send_to_server(b"\xAB\xCD", buff.getvalue())
 
 
     def __odometry_callback(self, msg: Odometry):
@@ -113,7 +113,7 @@ class SensorHubClient:
         rospy.loginfo_throttle(10, "__odometry_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
-        self.__send_to_server(b"\xAB\xCE", buff.getvalue(), set_length=True)
+        self.__send_to_server(b"\xAB\xCE", buff.getvalue())
 
 
     def __laser_scan_callback(self, msg: AxLaserScan):
@@ -121,10 +121,10 @@ class SensorHubClient:
             rospy.logwarn_throttle(1, "Receive AxLaserScan callback, but us dose not connect")
             return
 
-        rospy.loginfo_throttle(10, "__laser_scan_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
-        self.__send_to_server(b"\xAB\xCF", buff.getvalue(), set_length=True)
+        rospy.loginfo_throttle(10, f"__laser_scan_callback: {len(buff.getvalue())}")
+        self.__send_to_server(b"\xAB\xCF", buff.getvalue())
 
 
     def __hardware_state_callback(self, msg: HardwareState):
@@ -149,15 +149,14 @@ class SensorHubClient:
 
         buff = io.BytesIO()
         state.serialize(buff)
-        self.__send_to_server(b"\xAB\xD0", buff.getvalue(), set_length=True)
+        self.__send_to_server(b"\xAB\xD0", buff.getvalue())
 
 
-    # header + length(optional) + crc(body) + body
-    def __send_to_server(self, header, body, set_length=False):
+    # header + length + crc(body) + body
+    def __send_to_server(self, header, body,):
         try:
             data = header
-            if set_length:
-                data += len(body).to_bytes(4, "little")
+            data += len(body).to_bytes(4, "little")
             data += calculate_crc16(body).to_bytes(2, "little")
             data += body
             self.__client_socket.send(data)
