@@ -99,7 +99,7 @@ class SensorHubClient:
             rospy.logwarn_throttle(1, "Receive Imu callback, but us dose not connect")
             return
 
-        # 使用序列化的方法发布 imu
+        rospy.loginfo_throttle(10, "__imu_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
         self.__send_to_server(b"\xAB\xCD", buff.getvalue(), set_length=True)
@@ -110,6 +110,7 @@ class SensorHubClient:
             rospy.logwarn_throttle(1, "Receive Odometry callback, but us dose not connect")
             return
 
+        rospy.loginfo_throttle(10, "__odometry_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
         self.__send_to_server(b"\xAB\xCE", buff.getvalue(), set_length=True)
@@ -120,7 +121,7 @@ class SensorHubClient:
             rospy.logwarn_throttle(1, "Receive AxLaserScan callback, but us dose not connect")
             return
 
-        rospy.loginfo_throttle(5, "__laser_scan_callback")
+        rospy.loginfo_throttle(10, "__laser_scan_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
         self.__send_to_server(b"\xAB\xCF", buff.getvalue(), set_length=True)
