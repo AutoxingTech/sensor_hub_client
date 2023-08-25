@@ -16,8 +16,8 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 
 from rplidar_ros.msg import AxLaserScan
-from sensor_hub_client.msg import MockRobotState
-from sensor_hub_client.msg import MockRobotControl
+from sensor_hub_client.msg import TcpRobotState
+from sensor_hub_client.msg import TcpRobotControl
 
 from cln_msgs.msg import HardwareCtrl
 from cln_msgs.msg import SensorType
@@ -52,7 +52,6 @@ class SensorHubClient:
     def __init__(self, host, port) -> None:
         self.__host = host
         self.__port = port
-        self.__control_mode = -1
         self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self.__client_socket.settimeout(1)
         self.__has_connected = False
@@ -136,15 +135,12 @@ class SensorHubClient:
         if self.__hardware_state_index % 5 != 0:
             return
 
-        state = MockRobotState()
+        state = TcpRobotState()
         # msg.manual: True 代表无动力； False 代表机器驱动
-        # state.control_mode: 0: 手动模式; 1: 自动模式; 2: 远控 (澳汀没有专门的远控模式)
         if msg.manual:
-            state.control_mode = 0
+            state.wheels_enabled = False
         else:
-            state.control_mode = 1
-            if self.__control_mode == 2:
-                state.control_mode = 2
+            state.wheels_enabled = True
         
         state.is_charge = msg.bat_state # 0 放电 1 充电
         state.battery_percent = msg.bat_percentage # 百分比 0~100
@@ -203,21 +199,19 @@ class SensorHubClient:
         if calc_crc != recv_crc:
             rospy.logerr_throttle(1, "control wheel data crc error")
 
-        robotControl = MockRobotControl()
+        robotControl = TcpRobotControl()
         robotControl.deserialize(payload)
-        print(f"robotControl.control_mode is {robotControl.control_mode}")
-        self.__control_mode = robotControl.control_mode
+        print(f"robotControl.control_mode is {robotControl.enable_wheels}")
         
         ctrl = HardwareCtrl()
         ctrl.sensor_id.append(SensorType(0))
         ctrl.device_id.append(CleanDeviceType(0))
 
-        # 0: 手动模式; 1: 自动模式; 2: 远控 (澳汀没有专门的远控模式)
-        if robotControl.control_mode == 1 or robotControl.control_mode == 2:
+        if robotControl.enable_wheels:
             # 自动模式
             ctrl.state.append(HardwareStateType(7))
             print("should switch to auto mode")
-        elif robotControl.control_mode == 0:
+        else:
             # 手动模式
             ctrl.state.append(HardwareStateType(8))
             print("should switch to manual mode")

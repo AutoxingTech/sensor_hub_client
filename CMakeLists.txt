@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   cln_msgs
 )
 
-add_message_files(DIRECTORY msgs FILES MockRobotState.msg MockRobotControl.msg)
+add_message_files(DIRECTORY msgs FILES TcpRobotState.msg TcpRobotControl.msg)
 
 generate_messages(DEPENDENCIES geometry_msgs std_msgs)
 
