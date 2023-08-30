@@ -69,7 +69,7 @@ class SensorHubClient:
         self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
 
         # todo: 通过参数来设置 topic name
-        rospy.Subscriber("/aoting_imu", Imu, self.__imu_callback)
+        rospy.Subscriber("/imu", Imu, self.__imu_callback)
         rospy.Subscriber("/raw_odom", Odometry, self.__odometry_callback)
         rospy.Subscriber("/hardware_state", HardwareState, self.__hardware_state_callback)
         rospy.Subscriber("/ax_laser_scan", AxLaserScan, self.__laser_scan_callback)
