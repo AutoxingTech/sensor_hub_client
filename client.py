@@ -70,7 +70,7 @@ class SensorHubClient:
 
         # todo: 通过参数来设置 topic name
         rospy.Subscriber("/imu", Imu, self.__imu_callback)
-        rospy.Subscriber("/raw_odom", Odometry, self.__odometry_callback)
+        rospy.Subscriber("/odom", Odometry, self.__odometry_callback)
         rospy.Subscriber("/hardware_state", HardwareState, self.__hardware_state_callback)
         rospy.Subscriber("/ax_laser_scan", AxLaserScan, self.__laser_scan_callback)
 
@@ -82,21 +82,23 @@ class SensorHubClient:
         while not rospy.is_shutdown():
             while not rospy.is_shutdown() and not self.__has_connected:
                 try:
+                    rospy.logwarn_throttle(20, "try reconnect1")
                     self.__client_socket.connect((self.__host, self.__port))
                     self.__has_connected = True
                     rospy.loginfo("had connected to server")
                 except (ConnectionRefusedError, ConnectionAbortedError, socket.timeout):
+                    rospy.logwarn_throttle(20, "try reconnect2")
                     self.__has_connected = False
                     time.sleep(1)
-                    continue
 
+            rospy.logwarn_throttle(20, "try reconnect3")
             while not rospy.is_shutdown() and self.__has_connected:
                 self.__receive_and_process()
 
 
     def __imu_callback(self, msg: Imu):
         if not self.__has_connected:
-            rospy.logwarn_throttle(1, "Receive Imu callback, but us dose not connect")
+            rospy.logwarn_throttle(20, "Receive Imu callback, but us dose not connect")
             return
 
         rospy.loginfo_throttle(10, "__imu_callback")
@@ -107,7 +109,7 @@ class SensorHubClient:
 
     def __odometry_callback(self, msg: Odometry):
         if not self.__has_connected:
-            rospy.logwarn_throttle(1, "Receive Odometry callback, but us dose not connect")
+            rospy.logwarn_throttle(20, "Receive Odometry callback, but us dose not connect")
             return
 
         rospy.loginfo_throttle(10, "__odometry_callback")
@@ -118,7 +120,7 @@ class SensorHubClient:
 
     def __laser_scan_callback(self, msg: AxLaserScan):
         if not self.__has_connected:
-            rospy.logwarn_throttle(1, "Receive AxLaserScan callback, but us dose not connect")
+            rospy.logwarn_throttle(20, "Receive AxLaserScan callback, but us dose not connect")
             return
 
         buff = io.BytesIO()
@@ -129,7 +131,7 @@ class SensorHubClient:
 
     def __hardware_state_callback(self, msg: HardwareState):
         if not self.__has_connected:
-            rospy.logwarn_throttle(1, "Receive HardwareState callback, but us dose not connect")
+            rospy.logwarn_throttle(20, "Receive HardwareState callback, but us dose not connect")
             return
 
         self.__hardware_state_index += 1
