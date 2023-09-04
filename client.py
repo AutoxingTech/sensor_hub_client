@@ -52,7 +52,7 @@ class SensorHubClient:
     def __init__(self, host, port) -> None:
         self.__host = host
         self.__port = port
-        self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__client_socket = None
         # self.__client_socket.settimeout(1)
         self.__has_connected = False
         self.__cmd_vel_publisher = None
@@ -82,10 +82,11 @@ class SensorHubClient:
         while not rospy.is_shutdown():
             while not rospy.is_shutdown() and not self.__has_connected:
                 try:
+                    self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self.__client_socket.connect((self.__host, self.__port))
                     self.__has_connected = True
                     rospy.loginfo("had connected to server")
-                except (ConnectionRefusedError, ConnectionAbortedError, socket.timeout):
+                except Exception as _:
                     self.__has_connected = False
                     time.sleep(1)
                     continue
@@ -186,7 +187,6 @@ class SensorHubClient:
             rospy.logerr("socket disconnected")
             print("socket disconnected", e)
             self.__has_connected = False
-            self.__client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
     def __control_wheel(self):
