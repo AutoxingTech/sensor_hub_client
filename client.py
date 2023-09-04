@@ -11,7 +11,7 @@ import io
 import os
 
 import rospy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TransformStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 
@@ -67,6 +67,7 @@ class SensorHubClient:
 
         self.__cmd_vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20)
         self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
+        self.__tf_publisher = rospy.Publisher("/tf", TransformStamped, queue_size=50)
 
         # todo: 通过参数来设置 topic name
         rospy.Subscriber("/imu", Imu, self.__imu_callback)
@@ -182,6 +183,8 @@ class SensorHubClient:
                 self.__control_wheel()
             elif header2 == b"\xe2":
                 self.__process_cmd_vel()
+            elif header2 == b"\xe3":
+                self.__process_tf()
         except socket.timeout:
             print("receive socket timeout")
         except Exception as e:
@@ -235,6 +238,21 @@ class SensorHubClient:
         twist.deserialize(payload)
         rospy.logdebug(f"y is {twist.linear.x:.2f}, z is {twist.angular.z:.2f}")
         self.__cmd_vel_publisher.publish(twist)
+
+
+    def __process_tf(self):
+        rospy.logdebug("found tf data header")
+
+        length = int.from_bytes(self.__client_socket.recv(4), byteorder='little')
+        recv_crc = self.__client_socket.recv(2)
+        payload = self.__client_socket.recv(length)
+        calc_crc = calculate_crc16(payload).to_bytes(2, "little")
+        if calc_crc != recv_crc:
+            rospy.logerr_throttle(1, "cmd_vel crc error")
+
+        tf = TransformStamped()
+        tf.deserialize(payload)
+        self.__tf_publisher.publish(tf)
 
 
 if __name__ == "__main__":
