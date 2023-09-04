@@ -11,7 +11,8 @@ import io
 import os
 
 import rospy
-from geometry_msgs.msg import Twist, TransformStamped
+from geometry_msgs.msg import Twist
+from tf2_msgs.msg import TFMessage
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 
@@ -67,7 +68,7 @@ class SensorHubClient:
 
         self.__cmd_vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20)
         self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
-        self.__tf_publisher = rospy.Publisher("/tf", TransformStamped, queue_size=50)
+        self.__tf_publisher = rospy.Publisher("/tf", TFMessage, queue_size=50)
 
         # todo: 通过参数来设置 topic name
         rospy.Subscriber("/imu", Imu, self.__imu_callback)
@@ -250,7 +251,7 @@ class SensorHubClient:
         if calc_crc != recv_crc:
             rospy.logerr_throttle(1, "cmd_vel crc error")
 
-        tf = TransformStamped()
+        tf = TFMessage()
         tf.deserialize(payload)
         self.__tf_publisher.publish(tf)
 
