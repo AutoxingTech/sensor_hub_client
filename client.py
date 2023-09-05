@@ -9,6 +9,7 @@ import threading
 import time
 import io
 import os
+import tf2_ros.transform_broadcaster
 
 import rospy
 from geometry_msgs.msg import Twist
@@ -59,6 +60,8 @@ class SensorHubClient:
         self.__cmd_vel_publisher = None
         self.__control_publisher = None
         self.__hardware_state_index = 0 # 用于降采样
+        self.__tf2_broadcaster = tf2_ros.transform_broadcaster.TransformBroadcaster()
+        
         self.__thread = threading.Thread(target=self.__server_thread)
 
 
@@ -68,7 +71,6 @@ class SensorHubClient:
 
         self.__cmd_vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20)
         self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
-        self.__tf_publisher = rospy.Publisher("/tf", TFMessage, queue_size=50)
 
         # todo: 通过参数来设置 topic name
         rospy.Subscriber("/imu", Imu, self.__imu_callback)
@@ -251,9 +253,9 @@ class SensorHubClient:
         if calc_crc != recv_crc:
             rospy.logerr_throttle(1, "cmd_vel crc error")
 
-        tf = TFMessage()
-        tf.deserialize(payload)
-        self.__tf_publisher.publish(tf)
+        tf_msg = TFMessage()
+        tf_msg.deserialize(payload)
+        self.__tf2_broadcaster.sendTransform(tf_msg.transforms)
 
 
 if __name__ == "__main__":
