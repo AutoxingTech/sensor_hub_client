@@ -97,8 +97,11 @@ class SensorHubClient:
                     time.sleep(1)
 
             rospy.logwarn_throttle(20, "try reconnect3")
+            
+            rate = rospy.Rate(200)
             while not rospy.is_shutdown() and self.__has_connected:
                 self.__receive_and_process()
+                rate.sleep()
 
 
     def __imu_callback(self, msg: Imu):
