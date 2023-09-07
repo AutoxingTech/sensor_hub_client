@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
-import json
-import math
 import socket
-import struct
 import sys
 import threading
 import time
 import io
-import os
 import tf2_ros.transform_broadcaster
 
 import rospy
@@ -170,12 +166,9 @@ class SensorHubClient:
             data += calculate_crc16(body).to_bytes(2, "little")
             data += body
             self.__client_socket.send(data)
-            # print_bytes(data)
         except Exception as e:
             self.__has_connected = False
-            rospy.logerr(e)
-            rospy.logerr("socket disconnected")
-            print("socket disconnected", e)
+            rospy.logerr("socket disconnected", e)
 
 
     # 接受控制指令，下发给主机
@@ -192,11 +185,9 @@ class SensorHubClient:
             elif header2 == b"\xe3":
                 self.__process_tf()
         except socket.timeout:
-            print("receive socket timeout")
+            rospy.logwarn("receive socket timeout")
         except Exception as e:
-            rospy.logerr(e)
-            rospy.logerr("socket disconnected")
-            print("socket disconnected", e)
+            rospy.logerr("socket disconnected", e)
             self.__has_connected = False
 
 
@@ -212,7 +203,7 @@ class SensorHubClient:
 
         robotControl = TcpRobotControl()
         robotControl.deserialize(payload)
-        print(f"robotControl.control_mode is {robotControl.enable_wheels}")
+        rospy.loginfo(f"robotControl.control_mode is {robotControl.enable_wheels}")
         
         ctrl = HardwareCtrl()
         ctrl.sensor_id.append(SensorType(0))
@@ -221,11 +212,11 @@ class SensorHubClient:
         if robotControl.enable_wheels:
             # 自动模式
             ctrl.state.append(HardwareStateType(7))
-            print("should switch to auto mode")
+            rospy.loginfo("should switch to auto mode")
         else:
             # 手动模式
             ctrl.state.append(HardwareStateType(8))
-            print("should switch to manual mode")
+            rospy.loginfo("should switch to manual mode")
 
         self.__control_publisher.publish(ctrl)
 
