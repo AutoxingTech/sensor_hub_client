@@ -58,6 +58,10 @@ class SensorHubClient:
         self.__hardware_state_index = 0 # 用于降采样
         self.__tf2_broadcaster = tf2_ros.transform_broadcaster.TransformBroadcaster()
         
+        self.__last_imu_time = rospy.Time(0)
+        self.__last_lidar_time = rospy.Time(0)
+        self.__last_odom_time = rospy.Time(0)
+        
         self.__thread = threading.Thread(target=self.__server_thread)
 
 
@@ -104,6 +108,9 @@ class SensorHubClient:
         if not self.__has_connected:
             rospy.logwarn_throttle(20, "Receive Imu callback, but us dose not connect")
             return
+        
+        assert(self.__last_imu_time < msg.header.stamp)
+        self.__last_imu_time = msg.header.stamp
 
         rospy.loginfo_throttle(10, "__imu_callback")
         buff = io.BytesIO()
@@ -116,6 +123,9 @@ class SensorHubClient:
             rospy.logwarn_throttle(20, "Receive Odometry callback, but us dose not connect")
             return
 
+        assert(self.__last_odom_time < msg.header.stamp)
+        self.__last_odom_time = msg.header.stamp
+
         rospy.loginfo_throttle(10, "__odometry_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
@@ -126,6 +136,9 @@ class SensorHubClient:
         if not self.__has_connected:
             rospy.logwarn_throttle(20, "Receive AxLaserScan callback, but us dose not connect")
             return
+
+        assert(self.__last_lidar_time < msg.header.stamp)
+        self.__last_lidar_time = msg.header.stamp
 
         buff = io.BytesIO()
         msg.serialize(buff)
