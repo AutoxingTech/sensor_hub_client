@@ -112,7 +112,7 @@ class SensorHubClient:
         assert(self.__last_imu_time < msg.header.stamp)
         self.__last_imu_time = msg.header.stamp
 
-        rospy.loginfo_throttle(10, "__imu_callback")
+        rospy.loginfo_throttle(15, "__imu_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
         self.__send_to_server(b"\xAB\xCD", buff.getvalue())
@@ -126,7 +126,7 @@ class SensorHubClient:
         assert(self.__last_odom_time < msg.header.stamp)
         self.__last_odom_time = msg.header.stamp
 
-        rospy.loginfo_throttle(10, "__odometry_callback")
+        rospy.loginfo_throttle(15, "__odometry_callback")
         buff = io.BytesIO()
         msg.serialize(buff)
         self.__send_to_server(b"\xAB\xCE", buff.getvalue())
@@ -142,7 +142,7 @@ class SensorHubClient:
 
         buff = io.BytesIO()
         msg.serialize(buff)
-        rospy.loginfo_throttle(10, f"__laser_scan_callback: {len(buff.getvalue())}")
+        rospy.loginfo_throttle(15, f"__laser_scan_callback: {len(buff.getvalue())}")
         self.__send_to_server(b"\xAB\xCF", buff.getvalue())
 
 
@@ -205,7 +205,7 @@ class SensorHubClient:
 
 
     def __control_wheel(self):
-        rospy.logdebug("found control wheel data header")
+        rospy.loginfo_throttle(15, "found control wheel data header")
 
         length = int.from_bytes(self.__client_socket.recv(4), byteorder='little')
         recv_crc = self.__client_socket.recv(2)
@@ -235,7 +235,7 @@ class SensorHubClient:
 
 
     def __process_cmd_vel(self):
-        rospy.logdebug("found cmd vel data header")
+        rospy.loginfo_throttle(15, "found cmd vel data header")
 
         length = int.from_bytes(self.__client_socket.recv(4), byteorder='little')
         recv_crc = self.__client_socket.recv(2)
@@ -251,7 +251,7 @@ class SensorHubClient:
 
 
     def __process_tf(self):
-        rospy.logdebug("found tf data header")
+        rospy.loginfo_throttle(15, "found tf data header")
 
         length = int.from_bytes(self.__client_socket.recv(4), byteorder='little')
         recv_crc = self.__client_socket.recv(2)
