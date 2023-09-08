@@ -69,14 +69,14 @@ class SensorHubClient:
         rospy.init_node("sensor_hub_client")
         rospy.loginfo("start sensor hub client node.")
 
-        self.__cmd_vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20, latch=True)
-        self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10, latch=True)
+        self.__cmd_vel_publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20)
+        self.__control_publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
 
         # todo: 通过参数来设置 topic name
-        rospy.Subscriber("/imu", Imu, self.__imu_callback, queue_size=100)
-        rospy.Subscriber("/odom_origin", Odometry, self.__odometry_callback, queue_size=30)
-        rospy.Subscriber("/hardware_state", HardwareState, self.__hardware_state_callback, queue_size=5)
-        rospy.Subscriber("/ax_laser_scan", AxLaserScan, self.__laser_scan_callback, queue_size=10)
+        rospy.Subscriber("/imu", Imu, self.__imu_callback)
+        rospy.Subscriber("/odom_origin", Odometry, self.__odometry_callback)
+        rospy.Subscriber("/hardware_state", HardwareState, self.__hardware_state_callback)
+        rospy.Subscriber("/ax_laser_scan", AxLaserScan, self.__laser_scan_callback)
 
         self.__thread.start()
         rospy.spin()
