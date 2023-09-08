@@ -181,7 +181,7 @@ class SensorHubClient:
             self.__client_socket.send(data)
         except Exception as e:
             self.__has_connected = False
-            rospy.logerr("socket disconnected", e)
+            rospy.logerr("socket disconnected %s" % str(e))
 
 
     # 接受控制指令，下发给主机
@@ -200,7 +200,7 @@ class SensorHubClient:
         except socket.timeout:
             rospy.logwarn("receive socket timeout")
         except Exception as e:
-            rospy.logerr("socket disconnected", e)
+            rospy.logerr("socket disconnected %s" % str(e))
             self.__has_connected = False
 
 
