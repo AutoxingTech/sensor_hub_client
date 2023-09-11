@@ -5,8 +5,19 @@
                 "databaseFilename": "",
                 "limitSymbolsToIncludedHeaders": true
             },
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/../../devel/include",
+                "/opt/ros/melodic/include/**",
+                "/opt/ros/noetic/include/**",
+                "/usr/include/**"
+            ],
             "name": "ROS",
             "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
         }
     ],
     "version": 4

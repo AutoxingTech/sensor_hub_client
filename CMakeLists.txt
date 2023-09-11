@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   geometry_msgs
+  sensor_msgs
   message_generation
   tf
   cln_msgs
@@ -23,6 +24,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 file(GLOB SRC_FILES
     src/main.cpp
+    src/tcp_stream.cpp
+    src/sensor_hub_client.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})

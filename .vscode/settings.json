@@ -81,7 +81,8 @@
         "codecvt": "cpp",
         "*.inc": "cpp",
         "*.ipp": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "cerrno": "cpp"
     },
     "editor.defaultFormatter": "ms-vscode.cpptools",
     "cSpell.words": [
