@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.1)
 project(sensor_hub_client)
 
 find_package(catkin REQUIRED COMPONENTS
-  rospy
+  roscpp
+  roslib
   std_msgs
   std_srvs
   geometry_msgs
@@ -17,4 +18,20 @@ generate_messages(DEPENDENCIES geometry_msgs std_msgs)
 
 catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
 
-catkin_install_python(PROGRAMS client.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+include_directories(include ${catkin_INCLUDE_DIRS})
+
+
+file(GLOB SRC_FILES
+    src/main.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SRC_FILES})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${catkin_LIBRARIES})
+
+
+install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
