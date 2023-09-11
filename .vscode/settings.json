@@ -81,7 +81,8 @@
         "codecvt": "cpp",
         "*.inc": "cpp",
         "*.ipp": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "cerrno": "cpp"
     },
     "editor.defaultFormatter": "ms-vscode.cpptools",
     "cSpell.words": [
@@ -101,5 +102,9 @@
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/../../devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages",
+    ],
+    "python.analysis.extraPaths": [
+        "/home/wurong/ax/aoting_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
     ],
 }
