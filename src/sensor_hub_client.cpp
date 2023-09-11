@@ -1,4 +1,16 @@
 #include "sensor_hub_client.h"
+#include "sensor_hub_client/TcpRobotControl.h"
+#include "crc.h"
+
+using namespace cln_msgs;
+
+SensorHubClient::SensorHubClient() : m_nh("~"), m_modeControlParser({0xba, 0xe1}),
+                                     m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3})
+{
+    m_parserManager.addParser(&m_cmdVelParser);
+    m_parserManager.addParser(&m_modeControlParser);
+    m_parserManager.addParser(&m_tfParser);
+}
 
 int SensorHubClient::run()
 {
@@ -34,8 +46,11 @@ int SensorHubClient::run()
             }
         }
 
-        size_t readSize = m_comStream->read(buffer, 1024);
-        // feed(buffer, readSize);
+        m_comStream->read(&buffer[0], 1);
+        if (buffer[0] != 0xba)
+            continue;
+
+        //
     }
 
     return 0;
@@ -44,16 +59,123 @@ int SensorHubClient::run()
 // send socket.
 void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
 {
+    ROS_INFO_THROTTLE(10, "_imuCB");
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+
+    pack->header[0] = 0xab;
+    pack->header[1] = 0xcd;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
 }
 
 void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
 {
+    ROS_INFO_THROTTLE(10, "_odomCB");
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+
+    pack->header[0] = 0xab;
+    pack->header[1] = 0xce;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
 }
 
 void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
 {
+    ROS_INFO_THROTTLE(10, "_laserCB");
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+
+    pack->header[0] = 0xab;
+    pack->header[1] = 0xcf;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
 }
 
 void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
 {
+    ROS_INFO_THROTTLE(10, "_hwStateCB");
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+
+    pack->header[0] = 0xab;
+    pack->header[1] = 0xd0;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
+}
+
+void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *packRaw,
+                                                size_t bytes)
+{
+    MsgPack *pack = (MsgPack *)packRaw;
+    if (header == m_cmdVelParser.header())
+    {
+        // deserialize
+        static geometry_msgs::Twist twist;
+        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::deserialize(istream, twist);
+        m_cmdVelPub.publish(twist);
+    }
+    else if (header == m_modeControlParser.header())
+    {
+        // deserialize
+        static sensor_hub_client::TcpRobotControl robotControl;
+        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::deserialize(istream, robotControl);
+
+        ROS_INFO_STREAM("robotControl.control_mode is" << robotControl.enable_wheels);
+
+        HardwareCtrl ctrl;
+        ctrl.sensor_id.push_back(SensorType());
+        ctrl.device_id.push_back(CleanDeviceType());
+        if (robotControl.enable_wheels)
+        {
+            HardwareStateType stateType;
+            stateType.state = HardwareStateType::ON;
+            ctrl.state.push_back(stateType); // auto
+        }
+        else
+        {
+            HardwareStateType stateType;
+            stateType.state = HardwareStateType::OFF;
+            ctrl.state.push_back(stateType); // manual
+        }
+    }
+    else if (header == m_tfParser.header())
+    {
+        // deserialize
+        tf2_msgs::TFMessage tf_msg;
+        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::deserialize(istream, tf_msg);
+
+        for (const auto &transform : tf_msg.transforms)
+        {
+            tf2_broadcaster.sendTransform(transform);
+        }
+    }
 }

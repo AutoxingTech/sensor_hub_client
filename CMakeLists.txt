@@ -24,6 +24,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 file(GLOB SRC_FILES
     src/main.cpp
+    src/crc.cpp
+    src/tcp_pack.cpp
     src/tcp_stream.cpp
     src/sensor_hub_client.cpp
 )

@@ -103,4 +103,8 @@
         "${workspaceFolder}/../../devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages",
     ],
+    "python.analysis.extraPaths": [
+        "/home/wurong/ax/aoting_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
 }
