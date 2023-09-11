@@ -175,7 +175,7 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &head
 
         for (const auto &transform : tf_msg.transforms)
         {
-            tf2_broadcaster.sendTransform(transform);
+            m_tf2Broadcaster.sendTransform(transform);
         }
     }
 }

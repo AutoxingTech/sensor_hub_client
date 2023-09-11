@@ -45,7 +45,7 @@ private:
     ros::Publisher m_cmdVelPub;
     ros::Publisher m_modeControlPub;
 
-    tf2_ros::TransformBroadcaster tf2_broadcaster;
+    tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
     std::shared_ptr<TcpStream> m_comStream;
 
