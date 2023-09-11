@@ -5,24 +5,29 @@
 using namespace cln_msgs;
 
 SensorHubClient::SensorHubClient() : m_nh("~"), m_modeControlParser({0xba, 0xe1}),
-                                     m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3})
+                                     m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3}),
+                                     m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
 {
+    m_asyncHandle.setCallbackQueue(&m_callbackQueue);
+    m_asyncSpinner.start();
+
     m_parserManager.addParser(&m_cmdVelParser);
     m_parserManager.addParser(&m_modeControlParser);
     m_parserManager.addParser(&m_tfParser);
+
+    m_comStream = std::make_shared<TcpStream>();
 }
 
 int SensorHubClient::run()
 {
-    m_imuSub = m_nh.subscribe("/imu", 100, &SensorHubClient::_imuCB, this);
-    m_odomSub = m_nh.subscribe("/odom_origin", 50, &SensorHubClient::_odomCB, this);
-    m_laserSub = m_nh.subscribe("/ax_laser_scan", 10, &SensorHubClient::_laserCB, this);
-    m_hwStateSub = m_nh.subscribe("/hardware_state", 20, &SensorHubClient::_hwStateCB, this);
+    m_imuSub = m_asyncHandle.subscribe("/imu", 100, &SensorHubClient::_imuCB, this);
+    m_odomSub = m_asyncHandle.subscribe("/odom_origin", 50, &SensorHubClient::_odomCB, this);
+    m_laserSub = m_asyncHandle.subscribe("/ax_laser_scan", 10, &SensorHubClient::_laserCB, this);
+    m_hwStateSub = m_asyncHandle.subscribe("/hardware_state", 20, &SensorHubClient::_hwStateCB, this);
 
     m_cmdVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     m_modeControlPub = m_nh.advertise<cln_msgs::HardwareCtrl>("/automode_ctrl", 10);
 
-    m_comStream = std::make_shared<TcpStream>();
     uint8_t buffer[1024];
 
     m_nh.param<std::string>("host_ip", m_hostIP, "0.0.0.0");
@@ -46,11 +51,10 @@ int SensorHubClient::run()
             }
         }
 
-        m_comStream->read(&buffer[0], 1);
-        if (buffer[0] != 0xba)
-            continue;
-
-        //
+        int sizeOut = m_comStream->read(buffer, sizeof(buffer));
+        if (sizeOut > 0)
+            m_parserManager.feed(buffer, sizeOut);
+        ROS_INFO_THROTTLE(10, "read buffer size %d", sizeOut);
     }
 
     return 0;
@@ -71,8 +75,8 @@ void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
+    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
@@ -89,8 +93,8 @@ void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
+    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
@@ -107,8 +111,8 @@ void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
+    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
@@ -125,8 +129,8 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    size_t sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %zu", sizeOut);
+    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *packRaw,

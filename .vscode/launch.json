@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "g++ - Build and debug active file",
+            "name": "sensor_hub_client",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/../../devel/lib/sensor_hub_client/sensor_hub_client",
+            "envFile": "${workspaceFolder}/.env",
             "args": [
                 "run"
             ],

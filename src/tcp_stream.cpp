@@ -58,20 +58,20 @@ bool TcpStream::isConnected()
     return m_connected;
 }
 
-size_t TcpStream::read(uint8_t *buffer, size_t size)
+int TcpStream::read(uint8_t *buffer, size_t size)
 {
-    ssize_t num_bytes = recv(m_sockfd, buffer, size, 0);
+    int num_bytes = (int)recv(m_sockfd, buffer, size, 0);
     if (num_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
     {
         m_connected = false;
         return 0;
     }
-    return static_cast<size_t>(num_bytes);
+    return num_bytes;
 }
 
-size_t TcpStream::write(const uint8_t *buffer, size_t size)
+int TcpStream::write(const uint8_t *buffer, size_t size)
 {
-    ssize_t num_bytes = ::send(m_sockfd, buffer, size, MSG_NOSIGNAL);
+    ssize_t num_bytes = ::send(m_sockfd, buffer, size, 0);
     if (num_bytes < 0)
     {
         m_connected = false;

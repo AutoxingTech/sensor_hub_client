@@ -1,5 +1,6 @@
 #pragma once
 #include <ros/ros.h>
+#include <ros/callback_queue.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 #include <rplidar_ros/AxLaserScan.h>
@@ -34,6 +35,9 @@ private: // callback
 
 private:
     ros::NodeHandle m_nh;
+    ros::CallbackQueue m_callbackQueue;
+    ros::AsyncSpinner m_asyncSpinner;
+    ros::NodeHandle m_asyncHandle;
 
     // sub
     ros::Subscriber m_imuSub;
