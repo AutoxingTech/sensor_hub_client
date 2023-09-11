@@ -31,7 +31,7 @@ int SensorHubClient::run()
 
     uint8_t buffer[1024];
 
-    m_nh.param<std::string>("host_ip", m_hostIP, "0.0.0.0");
+    m_nh.param<std::string>("host_ip", m_hostIP, "127.0.0.2");
     m_nh.param<int>("host_port", m_hostPort, 8091);
 
     ros::Rate rate(200);
