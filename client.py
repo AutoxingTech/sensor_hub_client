@@ -266,7 +266,7 @@ class SensorHubClient:
 
 
 if __name__ == "__main__":
-    address = "0.0.0.0"
+    address = "172.17.0.2"
     port = 8091
 
     if len(sys.argv) > 1:
