@@ -67,7 +67,7 @@ int SensorHubClient::run()
 // send socket.
 void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
 {
-    ROS_INFO_THROTTLE(10, "_imuCB");
+    ROS_DEBUG_THROTTLE(10, "_imuCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
     MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
@@ -85,7 +85,7 @@ void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
 
 void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
 {
-    ROS_INFO_THROTTLE(10, "_odomCB");
+    ROS_DEBUG_THROTTLE(10, "_odomCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
     MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
@@ -103,7 +103,7 @@ void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
 
 void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
 {
-    ROS_INFO_THROTTLE(10, "_laserCB");
+    ROS_DEBUG_THROTTLE(10, "_laserCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
     MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
@@ -121,7 +121,7 @@ void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
 
 void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
 {
-    ROS_INFO_THROTTLE(10, "_hwStateCB");
+    ROS_DEBUG_THROTTLE(10, "_hwStateCB");
     static uint32_t hardWareRateCount = 0;
     if ((hardWareRateCount++) % 5 != 0)
         return;
@@ -168,7 +168,7 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &head
         ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
         ros::serialization::deserialize(istream, robotControl);
 
-        ROS_INFO_STREAM("robotControl.control_mode is" << robotControl.enable_wheels);
+        ROS_INFO("robotControl.control_mode is %d", (int)robotControl.enable_wheels);
 
         HardwareCtrl ctrl;
         ctrl.sensor_id.push_back(SensorType());
@@ -185,6 +185,8 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &head
             stateType.state = HardwareStateType::OFF;
             ctrl.state.push_back(stateType); // manual
         }
+
+        m_modeControlPub.publish(ctrl);
     }
     else if (header == m_tfParser.header())
     {
