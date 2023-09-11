@@ -2,7 +2,7 @@
     <arg name="output" default="screen" />
 
     <node name="sensor_hub_client" pkg="sensor_hub_client" type="sensor_hub_client" required="true" output="$(arg output)">
-        <param name="host_ip" type="string" value="127.0.0.2"/>
+        <param name="host_ip" type="string" value="172.17.0.2"/>
         <param name="host_port" type="int" value="8091"/>
     </node>
 </launch>
