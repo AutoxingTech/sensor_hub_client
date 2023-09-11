@@ -60,22 +60,25 @@ bool TcpStream::isConnected()
 
 int TcpStream::read(uint8_t *buffer, size_t size)
 {
-    int num_bytes = (int)recv(m_sockfd, buffer, size, 0);
-    if (num_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+    if (!m_connected)
+        return -1;
+
+    int numBytes = (int)recv(m_sockfd, buffer, size, 0);
+    if (numBytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
     {
         m_connected = false;
         return 0;
     }
-    return num_bytes;
+    return numBytes;
 }
 
 int TcpStream::write(const uint8_t *buffer, size_t size)
 {
-    ssize_t num_bytes = ::send(m_sockfd, buffer, size, 0);
-    if (num_bytes < 0)
+    ssize_t numBytes = ::send(m_sockfd, buffer, size, 0);
+    if (numBytes < 0)
     {
         m_connected = false;
         return 0;
     }
-    return static_cast<size_t>(num_bytes);
+    return static_cast<size_t>(numBytes);
 }

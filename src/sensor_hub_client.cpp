@@ -1,5 +1,6 @@
 #include "sensor_hub_client.h"
 #include "sensor_hub_client/TcpRobotControl.h"
+#include "sensor_hub_client/TcpRobotState.h"
 #include "crc.h"
 
 using namespace cln_msgs;
@@ -33,6 +34,8 @@ int SensorHubClient::run()
     m_nh.param<std::string>("host_ip", m_hostIP, "0.0.0.0");
     m_nh.param<int>("host_port", m_hostPort, 8091);
 
+    ros::Rate rate(200);
+
     while (ros::ok())
     {
         // check connect is ok.
@@ -54,7 +57,8 @@ int SensorHubClient::run()
         int sizeOut = m_comStream->read(buffer, sizeof(buffer));
         if (sizeOut > 0)
             m_parserManager.feed(buffer, sizeOut);
-        ROS_INFO_THROTTLE(10, "read buffer size %d", sizeOut);
+        ROS_DEBUG_THROTTLE(10, "read buffer size %d", sizeOut);
+        rate.sleep();
     }
 
     return 0;
@@ -76,7 +80,7 @@ void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
     int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
@@ -94,7 +98,7 @@ void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
     int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
@@ -112,17 +116,29 @@ void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
     int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
 {
     ROS_INFO_THROTTLE(10, "_hwStateCB");
+    static uint32_t hardWareRateCount = 0;
+    if ((hardWareRateCount++) % 5 != 0)
+        return;
 
-    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    sensor_hub_client::TcpRobotState state;
+    if (msg.manual)
+        state.wheels_enabled = false;
+    else
+        state.wheels_enabled = true;
+
+    state.is_charge = msg.bat_state;
+    state.battery_percent = msg.bat_percentage;
+
+    uint32_t payloadLength = ros::serialization::serializationLength(state);
     MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
     ros::serialization::OStream stream(pack->payload, payloadLength);
-    ros::serialization::serialize(stream, msg);
+    ros::serialization::serialize(stream, state);
 
     pack->header[0] = 0xab;
     pack->header[1] = 0xd0;
@@ -130,7 +146,7 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
     int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
-    ROS_INFO_THROTTLE(10, "write length is %d", sizeOut);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
 void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *packRaw,
