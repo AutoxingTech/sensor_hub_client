@@ -5,9 +5,9 @@
 
 using namespace cln_msgs;
 
-SensorHubClient::SensorHubClient() : m_nh("~"), m_modeControlParser({0xba, 0xe1}),
-                                     m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3}),
-                                     m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
+SensorHubClient::SensorHubClient()
+    : m_nh("~"), m_modeControlParser({0xba, 0xe1}), m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3}),
+      m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
 {
     m_asyncHandle.setCallbackQueue(&m_callbackQueue);
     m_asyncSpinner.start();
@@ -65,12 +65,12 @@ int SensorHubClient::run()
 }
 
 // send socket.
-void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
+void SensorHubClient::_imuCB(const sensor_msgs::Imu& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_imuCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
     ros::serialization::OStream stream(pack->payload, payloadLength);
     ros::serialization::serialize(stream, msg);
 
@@ -79,16 +79,16 @@ void SensorHubClient::_imuCB(const sensor_msgs::Imu &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
+void SensorHubClient::_odomCB(const nav_msgs::Odometry& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_odomCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
     ros::serialization::OStream stream(pack->payload, payloadLength);
     ros::serialization::serialize(stream, msg);
 
@@ -97,16 +97,16 @@ void SensorHubClient::_odomCB(const nav_msgs::Odometry &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
+void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_laserCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
     ros::serialization::OStream stream(pack->payload, payloadLength);
     ros::serialization::serialize(stream, msg);
 
@@ -115,11 +115,11 @@ void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
+void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_hwStateCB");
     static uint32_t hardWareRateCount = 0;
@@ -136,7 +136,7 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
     state.battery_percent = msg.bat_percentage;
 
     uint32_t payloadLength = ros::serialization::serializationLength(state);
-    MsgPack *pack = (MsgPack *)alloca(sizeof(MsgPack) + payloadLength);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
     ros::serialization::OStream stream(pack->payload, payloadLength);
     ros::serialization::serialize(stream, state);
 
@@ -145,19 +145,19 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState &msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
-    int sizeOut = m_comStream->write((uint8_t *)pack, sizeof(MsgPack) + payloadLength);
+    int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *packRaw,
-                                                size_t bytes)
+void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time,
+                                                const uint8_t* packRaw, size_t bytes)
 {
-    MsgPack *pack = (MsgPack *)packRaw;
+    MsgPack* pack = (MsgPack*)packRaw;
     if (header == m_cmdVelParser.header())
     {
         // deserialize
         static geometry_msgs::Twist twist;
-        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::IStream istream((uint8_t*)(pack->payload), pack->length);
         ros::serialization::deserialize(istream, twist);
         m_cmdVelPub.publish(twist);
     }
@@ -165,7 +165,7 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &head
     {
         // deserialize
         static sensor_hub_client::TcpRobotControl robotControl;
-        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::IStream istream((uint8_t*)(pack->payload), pack->length);
         ros::serialization::deserialize(istream, robotControl);
 
         ROS_INFO("robotControl.control_mode is %d", (int)robotControl.enable_wheels);
@@ -192,10 +192,10 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t> &head
     {
         // deserialize
         tf2_msgs::TFMessage tf_msg;
-        ros::serialization::IStream istream((uint8_t *)(pack->payload), pack->length);
+        ros::serialization::IStream istream((uint8_t*)(pack->payload), pack->length);
         ros::serialization::deserialize(istream, tf_msg);
 
-        for (const auto &transform : tf_msg.transforms)
+        for (const auto& transform : tf_msg.transforms)
         {
             m_tf2Broadcaster.sendTransform(transform);
         }

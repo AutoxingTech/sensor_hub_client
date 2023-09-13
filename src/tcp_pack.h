@@ -15,9 +15,9 @@ class MsgPackParser : public Parser
 public:
     MsgPackParser(std::vector<uint8_t> header) : m_header(header) {}
 
-    const std::vector<uint8_t> &header() override { return m_header; }
+    const std::vector<uint8_t>& header() override { return m_header; }
 
-    ParserResult feed(const uint8_t *bytes, size_t n, size_t *bytesUsed) override;
+    ParserResult feed(const uint8_t* bytes, size_t n, size_t* bytesUsed) override;
 
     const std::vector<uint8_t> m_header;
 };

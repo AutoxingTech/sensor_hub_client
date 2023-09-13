@@ -17,15 +17,15 @@ class Parser
 {
 public:
     virtual ~Parser(){};
-    virtual const std::vector<uint8_t> &header() = 0;
+    virtual const std::vector<uint8_t>& header() = 0;
 
-    virtual ParserResult feed(const uint8_t *bytes, size_t n, size_t *bytesUsed) = 0;
+    virtual ParserResult feed(const uint8_t* bytes, size_t n, size_t* bytesUsed) = 0;
 };
 
 class ParserManagerDelegate
 {
 public:
-    virtual void ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *pack,
+    virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
                                            size_t bytes) = 0;
 };
 
@@ -65,15 +65,15 @@ public:
 class ParserManager
 {
 public:
-    ParserManager(ParserManagerDelegate *d) { m_delegate = d; }
+    ParserManager(ParserManagerDelegate* d) { m_delegate = d; }
 
-    void addParser(Parser *parser) { m_parsers.push_back(parser); }
-    void addParsersFromAnotherManager(const ParserManager &r)
+    void addParser(Parser* parser) { m_parsers.push_back(parser); }
+    void addParsersFromAnotherManager(const ParserManager& r)
     {
         m_parsers.insert(m_parsers.end(), r.m_parsers.begin(), r.m_parsers.end());
     }
 
-    void feed(const uint8_t *bytes, size_t n)
+    void feed(const uint8_t* bytes, size_t n)
     {
         m_buffer.insert(m_buffer.end(), bytes, bytes + n);
 
@@ -122,13 +122,13 @@ public:
     }
 
 private:
-    int findHeader(Parser *parser, const uint8_t *bytes, size_t n)
+    int findHeader(Parser* parser, const uint8_t* bytes, size_t n)
     {
         if (n < parser->header().size())
             return -1;
 
-        const uint8_t *h = parser->header().data();
-        const uint8_t *pos = std::search(bytes, bytes + n, h, h + parser->header().size());
+        const uint8_t* h = parser->header().data();
+        const uint8_t* pos = std::search(bytes, bytes + n, h, h + parser->header().size());
         if (pos == bytes + n)
             return -1;
         else
@@ -136,9 +136,9 @@ private:
     }
 
 private:
-    ParserManagerDelegate *m_delegate;
-    Parser *m_currentParser = NULL;
-    std::vector<Parser *> m_parsers;
+    ParserManagerDelegate* m_delegate;
+    Parser* m_currentParser = NULL;
+    std::vector<Parser*> m_parsers;
     std::vector<uint8_t> m_buffer;
     ros::Time m_time;
 };

@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include "sensor_hub_client.h"
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     ros::init(argc, argv, "sensor_hub_client");
 

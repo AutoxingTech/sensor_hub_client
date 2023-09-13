@@ -28,7 +28,7 @@ bool TcpStream::open(std::string ip, int port = 8091)
     }
 
     // 连接服务器
-    if (connect(m_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    if (connect(m_sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
     {
         return false;
     }
@@ -58,7 +58,7 @@ bool TcpStream::isConnected()
     return m_connected;
 }
 
-int TcpStream::read(uint8_t *buffer, size_t size)
+int TcpStream::read(uint8_t* buffer, size_t size)
 {
     if (!m_connected)
         return -1;
@@ -72,7 +72,7 @@ int TcpStream::read(uint8_t *buffer, size_t size)
     return numBytes;
 }
 
-int TcpStream::write(const uint8_t *buffer, size_t size)
+int TcpStream::write(const uint8_t* buffer, size_t size)
 {
     ssize_t numBytes = ::send(m_sockfd, buffer, size, 0);
     if (numBytes < 0)

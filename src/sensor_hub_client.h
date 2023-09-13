@@ -25,12 +25,12 @@ public:
     int run();
 
 private: // callback
-    void _imuCB(const sensor_msgs::Imu &msg);
-    void _odomCB(const nav_msgs::Odometry &msg);
-    void _laserCB(const rplidar_ros::AxLaserScan &msg);
-    void _hwStateCB(const cln_msgs::HardwareState &msg);
+    void _imuCB(const sensor_msgs::Imu& msg);
+    void _odomCB(const nav_msgs::Odometry& msg);
+    void _laserCB(const rplidar_ros::AxLaserScan& msg);
+    void _hwStateCB(const cln_msgs::HardwareState& msg);
 
-    virtual void ParserManager_packetFound(const std::vector<uint8_t> &header, ros::Time time, const uint8_t *pack,
+    virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
                                            size_t bytes) override;
 
 private:

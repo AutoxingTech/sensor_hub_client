@@ -10,8 +10,8 @@ public:
     bool close();
     bool isConnected();
 
-    int read(uint8_t *buffer, size_t size);
-    int write(const uint8_t *buffer, size_t size);
+    int read(uint8_t* buffer, size_t size);
+    int write(const uint8_t* buffer, size_t size);
 
 private:
     bool m_connected;
