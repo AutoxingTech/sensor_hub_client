@@ -1,21 +1,21 @@
-配套的服务端地址: https://git.autoxing.com/liudf/sensor_hub_server
-
-
 ## 启动方法参考：
 
 ```
-source /home/aoting/rplidar_ws/install/setup.bash
-source /home/aoting/sensor_hub_client/install/setup.bash
-rosrun sensor_hub_client client.py
+source devel/setup.bash
 
+rosrun sensor_hub_client sensor_hub_client
+# 或
+roslaunch sensor_hub_client client.launch
 ```
 
 ## topic约定
 
-rospy.Subscriber("/imu", Imu, self.__imu_callback)
-rospy.Subscriber("/odom_origin", Odometry, self.__odometry_callback)
-rospy.Subscriber("/hardware_state", HardwareState, self.__hardware_state_callback)
-rospy.Subscriber("/ax_laser_scan", AxLaserScan, self.__laser_scan_callback)
+```
+m_imuSub = m_asyncHandle.subscribe("/imu", 100, &SensorHubClient::_imuCB, this);
+m_odomSub = m_asyncHandle.subscribe("/odom_origin", 50, &SensorHubClient::_odomCB, this);
+m_laserSub = m_asyncHandle.subscribe("/ax_laser_scan", 10, &SensorHubClient::_laserCB, this);
+m_hwStateSub = m_asyncHandle.subscribe("/hardware_state", 20, &SensorHubClient::_hwStateCB, this);
 
-publisher = rospy.Publisher("/cmd_vel", Twist, queue_size=20)
-publisher = rospy.Publisher("/automode_ctrl", HardwareCtrl, queue_size=10)
+m_cmdVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+m_modeControlPub = m_nh.advertise<cln_msgs::HardwareCtrl>("/automode_ctrl", 10);
+```
