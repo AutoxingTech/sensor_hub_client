@@ -107,4 +107,7 @@
         "/home/wurong/ax/aoting_ws/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
 }
