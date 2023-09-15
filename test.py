@@ -18,7 +18,10 @@ class SensorHubDebugger:
         factor = 360. / 65536.
         min_angle = (msg.angles[0] * factor)
         max_angle = (msg.angles[-1] * factor)
-        print(f"head angle is {min_angle}, tail angle is {max_angle}")
+        delta = max_angle - min_angle
+        if max_angle < min_angle:
+            delta += 360.
+        print(f"min angle is {min_angle}, max angle is {max_angle}, delta is {delta}")
         
         last_angle = (msg.angles[0] * factor)
         for angle in msg.angles:
