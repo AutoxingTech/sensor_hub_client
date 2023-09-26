@@ -7,6 +7,7 @@
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_msgs/TFMessage.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include "cln_msgs/HardwareCtrl.h"
 #include "cln_msgs/SensorType.h"
@@ -48,6 +49,7 @@ private:
     // pub
     ros::Publisher m_cmdVelPub;
     ros::Publisher m_modeControlPub;
+    ros::Publisher m_scanMatchedPub;
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
@@ -62,6 +64,7 @@ private:
     MsgPackParser m_modeControlParser;
     MsgPackParser m_cmdVelParser;
     MsgPackParser m_tfParser;
+    MsgPackParser m_scanMatchParser;
 
     // tcp send buffer
     uint8_t m_buffer[1024];
