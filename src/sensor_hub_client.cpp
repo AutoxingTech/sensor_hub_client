@@ -15,6 +15,7 @@ SensorHubClient::SensorHubClient()
     m_parserManager.addParser(&m_cmdVelParser);
     m_parserManager.addParser(&m_modeControlParser);
     m_parserManager.addParser(&m_tfParser);
+    m_parserManager.addParser(&m_scanMatchParser);
 
     m_comStream = std::make_shared<TcpStream>();
 }

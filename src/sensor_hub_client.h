@@ -65,7 +65,4 @@ private:
     MsgPackParser m_cmdVelParser;
     MsgPackParser m_tfParser;
     MsgPackParser m_scanMatchParser;
-
-    // tcp send buffer
-    uint8_t m_buffer[1024];
 };
