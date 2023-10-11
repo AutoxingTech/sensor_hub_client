@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <iostream>
+#include <ros/console.h>
 
 bool TcpStream::open(std::string ip, int port = 8091)
 {
@@ -12,6 +13,7 @@ bool TcpStream::open(std::string ip, int port = 8091)
     m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (m_sockfd == -1)
     {
+        ROS_INFO("socket fd == -1");
         return false;
     }
 
@@ -24,18 +26,22 @@ bool TcpStream::open(std::string ip, int port = 8091)
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, ip.c_str(), &(server_addr.sin_addr)) <= 0)
     {
+        ROS_INFO("inet_pton <= 0");
         return false;
     }
 
     // 连接服务器
     if (connect(m_sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
     {
+        ROS_INFO("connect < 0");
         return false;
     }
 
     // 设置套接字非阻塞模式
     int flags = fcntl(m_sockfd, F_GETFL, 0);
     fcntl(m_sockfd, F_SETFL, flags | O_NONBLOCK);
+
+    ROS_INFO("TcpStream::open");
 
     m_connected = true;
     return true;
