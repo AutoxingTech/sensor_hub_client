@@ -69,7 +69,8 @@ int SensorHubClient::run()
 // send socket.
 void SensorHubClient::_imuCB(const sensor_msgs::Imu& msg)
 {
-    ROS_DEBUG_THROTTLE(10, "_imuCB");
+    // aoting 的环境下使用 rosconsole echo 的时候，指定 debug level 的时候也不会出现这些日志
+    ROS_INFO_THROTTLE(60, "_imuCB");
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
     MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
