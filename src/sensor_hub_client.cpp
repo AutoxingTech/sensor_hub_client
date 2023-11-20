@@ -26,6 +26,7 @@ int SensorHubClient::run()
     m_odomSub = m_asyncHandle.subscribe("/odom_origin", 50, &SensorHubClient::_odomCB, this);
     m_laserSub = m_asyncHandle.subscribe("/ax_laser_scan", 10, &SensorHubClient::_laserCB, this);
     m_hwStateSub = m_asyncHandle.subscribe("/hardware_state", 20, &SensorHubClient::_hwStateCB, this);
+    m_lightFlowSub = m_asyncHandle.subscribe("/optical_flow", 120, &SensorHubClient::_opticalFlowCB, this);
 
     m_cmdVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     m_modeControlPub = m_nh.advertise<cln_msgs::HardwareCtrl>("/automode_ctrl", 10);
@@ -145,6 +146,24 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState& msg)
 
     pack->header[0] = 0xab;
     pack->header[1] = 0xd0;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
+}
+
+void SensorHubClient::_opticalFlowCB(const light_flow::OpticalFlowPack& msg)
+{
+    ROS_DEBUG_THROTTLE(10, "_opticalFlowCB");
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+
+    pack->header[0] = 0xab;
+    pack->header[1] = 0xd1;
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
