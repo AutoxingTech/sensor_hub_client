@@ -52,7 +52,6 @@ private:
     // pub
     ros::Publisher m_cmdVelPub;
     ros::Publisher m_modeControlPub;
-    ros::Publisher m_scanMatchedPub;
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
@@ -67,5 +66,4 @@ private:
     MsgPackParser m_modeControlParser;
     MsgPackParser m_cmdVelParser;
     MsgPackParser m_tfParser;
-    MsgPackParser m_scanMatchParser;
 };

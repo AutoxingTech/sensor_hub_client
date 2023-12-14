@@ -7,7 +7,7 @@ using namespace cln_msgs;
 
 SensorHubClient::SensorHubClient()
     : m_nh("~"), m_modeControlParser({0xba, 0xe1}), m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3}),
-      m_scanMatchParser({0xba, 0xe4}), m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
+      m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
 {
     m_asyncHandle.setCallbackQueue(&m_callbackQueue);
     m_asyncSpinner.start();
@@ -15,7 +15,6 @@ SensorHubClient::SensorHubClient()
     m_parserManager.addParser(&m_cmdVelParser);
     m_parserManager.addParser(&m_modeControlParser);
     m_parserManager.addParser(&m_tfParser);
-    m_parserManager.addParser(&m_scanMatchParser);
 
     m_comStream = std::make_shared<TcpStream>();
 }
@@ -30,7 +29,6 @@ int SensorHubClient::run()
 
     m_cmdVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
     m_modeControlPub = m_nh.advertise<cln_msgs::HardwareCtrl>("/automode_ctrl", 10);
-    m_scanMatchedPub = m_nh.advertise<sensor_msgs::PointCloud2>("/ax_scan_matched_points2", 10);
 
     uint8_t buffer[1024];
 
@@ -221,14 +219,5 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& head
         {
             m_tf2Broadcaster.sendTransform(transform);
         }
-    }
-    else if (header == m_scanMatchParser.header())
-    {
-        // deserialize
-        static sensor_msgs::PointCloud2 matchPoints;
-        ros::serialization::IStream istream((uint8_t*)(pack->payload), pack->length);
-        ros::serialization::deserialize(istream, matchPoints);
-
-        m_scanMatchedPub.publish(matchPoints);
     }
 }
