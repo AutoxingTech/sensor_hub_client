@@ -151,7 +151,7 @@ void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState& msg)
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::_opticalFlowCB(const light_flow::OpticalFlowPack& msg)
+void SensorHubClient::_opticalFlowCB(const std_msgs::String& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_opticalFlowCB");
 
