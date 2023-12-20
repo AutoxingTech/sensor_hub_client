@@ -6,8 +6,8 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "includePath": [
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/../../devel/include/**",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/../../devel/include",
                 "/opt/ros/melodic/include/**",
                 "/opt/ros/noetic/include/**",
                 "/usr/include/**"

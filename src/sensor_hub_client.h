@@ -9,7 +9,6 @@
 #include <tf2_msgs/TFMessage.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include "light_flow/OpticalFlowPack.h"
 #include "cln_msgs/HardwareCtrl.h"
 #include "cln_msgs/SensorType.h"
 #include "cln_msgs/CleanDeviceType.h"
@@ -31,7 +30,6 @@ private: // callback
     void _odomCB(const nav_msgs::Odometry& msg);
     void _laserCB(const rplidar_ros::AxLaserScan& msg);
     void _hwStateCB(const cln_msgs::HardwareState& msg);
-    void _opticalFlowCB(const light_flow::OpticalFlowPack& msg);
 
     virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
                                            size_t bytes) override;
@@ -47,7 +45,6 @@ private:
     ros::Subscriber m_odomSub;
     ros::Subscriber m_laserSub;
     ros::Subscriber m_hwStateSub;
-    ros::Subscriber m_lightFlowSub;
 
     // pub
     ros::Publisher m_cmdVelPub;
