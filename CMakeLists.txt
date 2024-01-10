@@ -17,7 +17,7 @@ add_message_files(DIRECTORY msgs FILES TcpRobotState.msg TcpRobotControl.msg)
 
 generate_messages(DEPENDENCIES geometry_msgs std_msgs)
 
-catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
+catkin_package(CATKIN_DEPENDS message_runtime std_msgs cln_msgs)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 

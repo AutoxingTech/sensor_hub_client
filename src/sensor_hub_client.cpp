@@ -102,7 +102,7 @@ void SensorHubClient::_odomCB(const nav_msgs::Odometry& msg)
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
 
-void SensorHubClient::_laserCB(const rplidar_ros::AxLaserScan& msg)
+void SensorHubClient::_laserCB(const cln_msgs::AxLaserScan& msg)
 {
     ROS_DEBUG_THROTTLE(10, "_laserCB");
 

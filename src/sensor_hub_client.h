@@ -3,7 +3,7 @@
 #include <ros/callback_queue.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
-#include <rplidar_ros/AxLaserScan.h>
+#include <cln_msgs/AxLaserScan.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_msgs/TFMessage.h>
@@ -28,7 +28,7 @@ public:
 private: // callback
     void _imuCB(const sensor_msgs::Imu& msg);
     void _odomCB(const nav_msgs::Odometry& msg);
-    void _laserCB(const rplidar_ros::AxLaserScan& msg);
+    void _laserCB(const cln_msgs::AxLaserScan& msg);
     void _hwStateCB(const cln_msgs::HardwareState& msg);
 
     virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
