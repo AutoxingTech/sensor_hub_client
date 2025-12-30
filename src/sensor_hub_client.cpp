@@ -3,8 +3,6 @@
 #include "sensor_hub_client/TcpRobotState.h"
 #include "crc.h"
 
-using namespace cln_msgs;
-
 SensorHubClient::SensorHubClient()
     : m_nh("~"), m_modeControlParser({0xba, 0xe1}), m_cmdVelParser({0xba, 0xe2}), m_tfParser({0xba, 0xe3}),
       m_asyncSpinner(1, &m_callbackQueue), m_asyncHandle("~")
@@ -21,13 +19,9 @@ SensorHubClient::SensorHubClient()
 
 int SensorHubClient::run()
 {
-    m_imuSub = m_asyncHandle.subscribe("/imu", 100, &SensorHubClient::_imuCB, this);
-    m_odomSub = m_asyncHandle.subscribe("/odom_origin", 50, &SensorHubClient::_odomCB, this);
-    m_laserSub = m_asyncHandle.subscribe("/ax_laser_scan", 10, &SensorHubClient::_laserCB, this);
-    m_hwStateSub = m_asyncHandle.subscribe("/hardware_state", 20, &SensorHubClient::_hwStateCB, this);
-
+    m_controlModeClient = m_nh.serviceClient<ax_msgs::SetControlMode>("/wheel_control/set_control_mode");
+    // m_imuSub = m_asyncHandle.subscribe("/imu", 100, &SensorHubClient::_imuCB, this);
     m_cmdVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
-    m_modeControlPub = m_nh.advertise<cln_msgs::HardwareCtrl>("/automode_ctrl", 10);
 
     uint8_t buffer[1024];
 
@@ -64,92 +58,6 @@ int SensorHubClient::run()
     return 0;
 }
 
-// send socket.
-void SensorHubClient::_imuCB(const sensor_msgs::Imu& msg)
-{
-    // aoting 的环境下使用 rosconsole echo 的时候，指定 debug level 的时候也不会出现这些日志
-    ROS_INFO_THROTTLE(60, "_imuCB");
-
-    uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
-    ros::serialization::OStream stream(pack->payload, payloadLength);
-    ros::serialization::serialize(stream, msg);
-
-    pack->header[0] = 0xab;
-    pack->header[1] = 0xcd;
-    pack->length = payloadLength;
-    pack->crc = calculateCRC16(pack->payload, pack->length);
-
-    int sizeOut = m_tcpStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
-    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
-}
-
-void SensorHubClient::_odomCB(const nav_msgs::Odometry& msg)
-{
-    ROS_DEBUG_THROTTLE(10, "_odomCB");
-
-    uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
-    ros::serialization::OStream stream(pack->payload, payloadLength);
-    ros::serialization::serialize(stream, msg);
-
-    pack->header[0] = 0xab;
-    pack->header[1] = 0xce;
-    pack->length = payloadLength;
-    pack->crc = calculateCRC16(pack->payload, pack->length);
-
-    int sizeOut = m_tcpStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
-    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
-}
-
-void SensorHubClient::_laserCB(const cln_msgs::AxLaserScan& msg)
-{
-    ROS_DEBUG_THROTTLE(10, "_laserCB");
-
-    uint32_t payloadLength = ros::serialization::serializationLength(msg);
-    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
-    ros::serialization::OStream stream(pack->payload, payloadLength);
-    ros::serialization::serialize(stream, msg);
-
-    pack->header[0] = 0xab;
-    pack->header[1] = 0xcf;
-    pack->length = payloadLength;
-    pack->crc = calculateCRC16(pack->payload, pack->length);
-
-    int sizeOut = m_tcpStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
-    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
-}
-
-void SensorHubClient::_hwStateCB(const cln_msgs::HardwareState& msg)
-{
-    ROS_DEBUG_THROTTLE(10, "_hwStateCB");
-    static uint32_t hardWareRateCount = 0;
-    if ((hardWareRateCount++) % 5 != 0)
-        return;
-
-    sensor_hub_client::TcpRobotState state;
-    if (msg.manual)
-        state.wheels_enabled = false;
-    else
-        state.wheels_enabled = true;
-
-    state.is_charge = msg.bat_state;
-    state.battery_percent = msg.bat_percentage;
-
-    uint32_t payloadLength = ros::serialization::serializationLength(state);
-    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
-    ros::serialization::OStream stream(pack->payload, payloadLength);
-    ros::serialization::serialize(stream, state);
-
-    pack->header[0] = 0xab;
-    pack->header[1] = 0xd0;
-    pack->length = payloadLength;
-    pack->crc = calculateCRC16(pack->payload, pack->length);
-
-    int sizeOut = m_tcpStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
-    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
-}
-
 void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time,
                                                 const uint8_t* packRaw, size_t bytes)
 {
@@ -162,33 +70,6 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& head
         ros::serialization::deserialize(istream, twist);
         m_cmdVelPub.publish(twist);
     }
-    else if (header == m_modeControlParser.header())
-    {
-        // deserialize
-        static sensor_hub_client::TcpRobotControl robotControl;
-        ros::serialization::IStream istream((uint8_t*)(pack->payload), pack->length);
-        ros::serialization::deserialize(istream, robotControl);
-
-        ROS_INFO("robotControl.control_mode is %d", (int)robotControl.enable_wheels);
-
-        HardwareCtrl ctrl;
-        ctrl.sensor_id.push_back(SensorType());
-        ctrl.device_id.push_back(CleanDeviceType());
-        if (robotControl.enable_wheels)
-        {
-            HardwareStateType stateType;
-            stateType.state = HardwareStateType::ON;
-            ctrl.state.push_back(stateType); // auto
-        }
-        else
-        {
-            HardwareStateType stateType;
-            stateType.state = HardwareStateType::OFF;
-            ctrl.state.push_back(stateType); // manual
-        }
-
-        m_modeControlPub.publish(ctrl);
-    }
     else if (header == m_tfParser.header())
     {
         // deserialize
@@ -200,5 +81,26 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& head
         {
             m_tf2Broadcaster.sendTransform(transform);
         }
+    }
+}
+
+void SensorHubClient::setUserControlMode(UserControlMode mode)
+{
+    ax_msgs::SetControlMode srv;
+    srv.request.mode = static_cast<int8_t>(mode);
+    if (m_controlModeClient.call(srv))
+    {
+        if (srv.response.success)
+        {
+            ROS_INFO("Set user control mode to %d success.", srv.request.mode);
+        }
+        else
+        {
+            ROS_WARN("Set user control mode to %d failed.", srv.request.mode);
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service /wheel_control/set_control_mode");
     }
 }

@@ -3,20 +3,15 @@
 #include <ros/callback_queue.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
-#include <cln_msgs/AxLaserScan.h>
+#include <ax_msgs/SetControlMode.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_msgs/TFMessage.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include "cln_msgs/HardwareCtrl.h"
-#include "cln_msgs/SensorType.h"
-#include "cln_msgs/CleanDeviceType.h"
-#include "cln_msgs/HardwareState.h"
-#include "cln_msgs/HardwareStateType.h"
-
 #include "tcp_stream.h"
 #include "tcp_pack.h"
+#include "common.h"
 
 class SensorHubClient : public ParserManagerDelegate
 {
@@ -25,14 +20,12 @@ public:
     ~SensorHubClient() {}
     int run();
 
-private: // callback
-    void _imuCB(const sensor_msgs::Imu& msg);
-    void _odomCB(const nav_msgs::Odometry& msg);
-    void _laserCB(const cln_msgs::AxLaserScan& msg);
-    void _hwStateCB(const cln_msgs::HardwareState& msg);
-
+private:
+    // callback
     virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
                                            size_t bytes) override;
+
+    void setUserControlMode(UserControlMode mode);
 
 private:
     ros::NodeHandle m_nh;
@@ -42,13 +35,9 @@ private:
 
     // sub
     ros::Subscriber m_imuSub;
-    ros::Subscriber m_odomSub;
-    ros::Subscriber m_laserSub;
-    ros::Subscriber m_hwStateSub;
 
     // pub
     ros::Publisher m_cmdVelPub;
-    ros::Publisher m_modeControlPub;
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
@@ -63,4 +52,6 @@ private:
     MsgPackParser m_modeControlParser;
     MsgPackParser m_cmdVelParser;
     MsgPackParser m_tfParser;
+
+    ros::ServiceClient m_controlModeClient;
 };
