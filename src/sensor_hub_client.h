@@ -37,7 +37,7 @@ private:
     ros::Subscriber m_imuSub;
 
     // pub
-    ros::Publisher m_cmdVelPub;
+    ros::Publisher m_lonYuImuPub;
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
@@ -49,9 +49,7 @@ private:
 
     // tcp parser
     ParserManager m_parserManager{this};
-    MsgPackParser m_modeControlParser;
-    MsgPackParser m_cmdVelParser;
-    MsgPackParser m_tfParser;
+    MsgPackParser m_imuParser;
 
     ros::ServiceClient m_controlModeClient;
 };
