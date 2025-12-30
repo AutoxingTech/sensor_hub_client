@@ -52,7 +52,7 @@ private:
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 
-    std::shared_ptr<TcpStream> m_comStream;
+    std::shared_ptr<TcpStream> m_tcpStream;
 
     // param
     std::string m_hostIP;
