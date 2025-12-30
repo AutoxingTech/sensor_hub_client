@@ -28,6 +28,8 @@ int SensorHubClient::run()
     m_nh.param<std::string>("host_ip", m_hostIP, "127.0.0.1");
     m_nh.param<int>("host_port", m_hostPort, 8091);
 
+    setUserControlMode(UserControlMode::manual);
+
     ros::Rate rate(200);
 
     while (ros::ok())
@@ -87,16 +89,16 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& head
 void SensorHubClient::setUserControlMode(UserControlMode mode)
 {
     ax_msgs::SetControlMode srv;
-    srv.request.mode = static_cast<int8_t>(mode);
+    srv.request.control_mode = UserControlMode_toString(mode);
     if (m_controlModeClient.call(srv))
     {
         if (srv.response.success)
         {
-            ROS_INFO("Set user control mode to %d success.", srv.request.mode);
+            ROS_INFO("Set user control mode to %s success.", srv.request.control_mode.c_str());
         }
         else
         {
-            ROS_WARN("Set user control mode to %d failed.", srv.request.mode);
+            ROS_WARN("Set user control mode to %s failed.", srv.request.control_mode.c_str());
         }
     }
     else

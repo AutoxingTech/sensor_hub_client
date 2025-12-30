@@ -7,3 +7,6 @@ enum class UserControlMode
     manual = 2,
     remote = 3,
 };
+
+UserControlMode UserControlMode_fromString(const char* str);
+const char* UserControlMode_toString(UserControlMode mode);

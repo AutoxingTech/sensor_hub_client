@@ -8,6 +8,7 @@
             "includePath": [
                 "${workspaceFolder}/src",
                 "${workspaceFolder}/../../devel/include",
+                "${workspaceFolder}/../ax_msgs/ax_msgs/include",
                 "/opt/ros/melodic/include/**",
                 "/opt/ros/noetic/include/**",
                 "/usr/include/**"

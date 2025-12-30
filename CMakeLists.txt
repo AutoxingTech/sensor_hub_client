@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf
   ax_msgs
+  nc_runtime
 )
 
 add_message_files(DIRECTORY msgs FILES TcpRobotState.msg TcpRobotControl.msg)
@@ -28,6 +29,7 @@ file(GLOB SRC_FILES
     src/tcp_pack.cpp
     src/tcp_stream.cpp
     src/sensor_hub_client.cpp
+    src/common.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
