@@ -80,6 +80,24 @@ void SensorHubClient::_imuCB(const sensor_msgs::Imu& msg)
     pack->length = payloadLength;
     pack->crc = calculateCRC16(pack->payload, pack->length);
 
+    ROS_INFO("msg: seq=%u, sec=%u, nsec=%u, frame_id=%s", msg.header.seq, msg.header.stamp.sec, msg.header.stamp.nsec,
+             msg.header.frame_id.c_str());
+    ROS_INFO("msg orientation: x=%f, y=%f, z=%f, w=%f", msg.orientation.x, msg.orientation.y, msg.orientation.z,
+             msg.orientation.w);
+    ROS_INFO("msg angular_velocity: x=%f, y=%f, z=%f", msg.angular_velocity.x, msg.angular_velocity.y,
+             msg.angular_velocity.z);
+    ROS_INFO("msg linear_acceleration: x=%f, y=%f, z=%f", msg.linear_acceleration.x, msg.linear_acceleration.y,
+             msg.linear_acceleration.z);
+
+    uint8_t* p = (uint8_t*)pack;
+    uint32_t totalSize = sizeof(MsgPack) + payloadLength;
+    ROS_INFO("payloadLength=%u", payloadLength);
+    for (uint32_t i = 0; i < totalSize; i++)
+    {
+        printf("0x%02x ", p[i]);
+    }
+    printf("\n");
+
     int sizeOut = m_comStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
     ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
 }
