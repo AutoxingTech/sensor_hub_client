@@ -3,7 +3,9 @@
 #include <ros/callback_queue.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Bool.h>
 #include <ax_msgs/SetControlMode.h>
+#include <ax_msgs/WheelState.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_msgs/TFMessage.h>
@@ -25,7 +27,11 @@ private:
     virtual void ParserManager_packetFound(const std::vector<uint8_t>& header, ros::Time time, const uint8_t* pack,
                                            size_t bytes) override;
 
-    void setUserControlMode(UserControlMode mode);
+    void setUserControlMode(const std::string& mode);
+
+    void wheelStateCallback(const ax_msgs::WheelState::ConstPtr& msg);
+    void requestWheelEnable();
+    void commonTimerCallback(const ros::SteadyTimerEvent& event);
 
 private:
     ros::NodeHandle m_nh;
@@ -33,11 +39,16 @@ private:
     ros::AsyncSpinner m_asyncSpinner;
     ros::NodeHandle m_asyncHandle;
 
+    std::string m_userControlMode = "manual";
+
     // sub
-    ros::Subscriber m_imuSub;
+    ros::Subscriber m_wheelStateSub;
 
     // pub
     ros::Publisher m_lonYuImuPub;
+
+    // timer
+    ros::SteadyTimer m_commonTimer;
 
     tf2_ros::TransformBroadcaster m_tf2Broadcaster;
 

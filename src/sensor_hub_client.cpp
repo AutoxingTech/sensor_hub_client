@@ -19,10 +19,16 @@ int SensorHubClient::run()
     m_controlModeClient = m_nh.serviceClient<ax_msgs::SetControlMode>("/wheel_control/set_control_mode");
     m_lonYuImuPub = m_nh.advertise<sensor_msgs::Imu>("/lon_yu_imu", 100);
 
+    m_wheelStateSub =
+        m_asyncHandle.subscribe("/wheel_control/wheel_state", 20, &SensorHubClient::wheelStateCallback, this);
+
     m_nh.param<std::string>("host_ip", m_hostIP, "127.0.0.1");
     m_nh.param<int>("host_port", m_hostPort, 8091);
 
-    setUserControlMode(UserControlMode::manual);
+    setUserControlMode(m_userControlMode);
+
+    // 创建1秒一次的定时器
+    m_commonTimer = m_nh.createSteadyTimer(ros::WallDuration(0.5), &SensorHubClient::commonTimerCallback, this);
 
     uint8_t buffer[1024];
     ros::Rate rate(200);
@@ -69,10 +75,10 @@ void SensorHubClient::ParserManager_packetFound(const std::vector<uint8_t>& head
     }
 }
 
-void SensorHubClient::setUserControlMode(UserControlMode mode)
+void SensorHubClient::setUserControlMode(const std::string& mode)
 {
     ax_msgs::SetControlMode srv;
-    srv.request.control_mode = UserControlMode_toString(mode);
+    srv.request.control_mode = mode;
     if (m_controlModeClient.call(srv))
     {
         if (srv.response.success)
@@ -88,4 +94,36 @@ void SensorHubClient::setUserControlMode(UserControlMode mode)
     {
         ROS_ERROR("Failed to call service /wheel_control/set_control_mode");
     }
+}
+
+void SensorHubClient::wheelStateCallback(const ax_msgs::WheelState::ConstPtr& msg)
+{
+    if (msg->control_mode != m_userControlMode)
+    {
+        m_userControlMode = msg->control_mode;
+    }
+}
+
+void SensorHubClient::requestWheelEnable()
+{
+    std_msgs::Bool msg;
+    UserControlMode mode = UserControlMode_fromString(m_userControlMode.c_str());
+    msg.data = (mode == UserControlMode::automatic || mode == UserControlMode::remote);
+
+    uint32_t payloadLength = ros::serialization::serializationLength(msg);
+    MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
+    ros::serialization::OStream stream(pack->payload, payloadLength);
+    ros::serialization::serialize(stream, msg);
+    pack->header[0] = 0xba;
+    pack->header[1] = 0xe1;
+    pack->length = payloadLength;
+    pack->crc = calculateCRC16(pack->payload, pack->length);
+
+    int sizeOut = m_tcpStream->write((uint8_t*)pack, sizeof(MsgPack) + payloadLength);
+    ROS_DEBUG_THROTTLE(10, "write length is %d", sizeOut);
+}
+
+void SensorHubClient::commonTimerCallback(const ros::SteadyTimerEvent& event)
+{
+    requestWheelEnable();
 }
