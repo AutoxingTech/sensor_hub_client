@@ -39,7 +39,8 @@ private:
     ros::AsyncSpinner m_asyncSpinner;
     ros::NodeHandle m_asyncHandle;
 
-    std::string m_userControlMode = "manual";
+    std::string m_userControlModeStr = "manual";
+    UserControlMode m_userControlMode = UserControlMode::manual;
 
     // sub
     ros::Subscriber m_wheelStateSub;

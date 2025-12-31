@@ -25,7 +25,7 @@ int SensorHubClient::run()
     m_nh.param<std::string>("host_ip", m_hostIP, "127.0.0.1");
     m_nh.param<int>("host_port", m_hostPort, 8091);
 
-    setUserControlMode(m_userControlMode);
+    setUserControlMode(m_userControlModeStr);
 
     // 创建1秒一次的定时器
     m_commonTimer = m_nh.createSteadyTimer(ros::WallDuration(0.5), &SensorHubClient::commonTimerCallback, this);
@@ -98,17 +98,17 @@ void SensorHubClient::setUserControlMode(const std::string& mode)
 
 void SensorHubClient::wheelStateCallback(const ax_msgs::WheelState::ConstPtr& msg)
 {
-    if (msg->control_mode != m_userControlMode)
+    if (msg->control_mode != m_userControlModeStr)
     {
-        m_userControlMode = msg->control_mode;
+        m_userControlModeStr = msg->control_mode;
+        m_userControlMode = UserControlMode_fromString(m_userControlModeStr.c_str());
     }
 }
 
 void SensorHubClient::requestWheelEnable()
 {
     std_msgs::Bool msg;
-    UserControlMode mode = UserControlMode_fromString(m_userControlMode.c_str());
-    msg.data = (mode == UserControlMode::automatic || mode == UserControlMode::remote);
+    msg.data = (m_userControlMode == UserControlMode::automatic || m_userControlMode == UserControlMode::remote);
 
     uint32_t payloadLength = ros::serialization::serializationLength(msg);
     MsgPack* pack = (MsgPack*)alloca(sizeof(MsgPack) + payloadLength);
