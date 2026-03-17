@@ -27,6 +27,17 @@
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "preLaunchTask": "catkin_make: build"
+        },
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "env": {
+                "ROS_MASTER_URI": "http://localhost:11311",
+                "PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages:${env:PYTHONPATH}"
+            }
         }
     ]
 }
