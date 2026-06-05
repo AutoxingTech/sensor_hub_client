@@ -89,6 +89,8 @@
 | TrackedPose         | 9102      | 50 Hz    | < 100 B  | 与 TF 互斥                       |
 | _预留_              | 9103–9199 | —        | —        | 未来新增指令类型                 |
 
+> **说明**：CmdVel、LockRelease、EmergencyStop 共用端口 9101 是基于实际考虑——控制指令包极小（< 50 B），即使三者在同一端口到达，用户态按 `MessageType` 过滤的开销可忽略。反之若为每种指令单独开端口，反而徒增底盘端 socket 数量和端口管理复杂度。对性能有更高要求的指令（如 50Hz 的 TF/PortingOdom）则独立走 9102 端口隔离。
+
 ---
 
 ## 4. 序列化：Protocol Buffers
@@ -123,7 +125,6 @@ enum MessageType {
   MSG_PORTING_ODOM = 9;
   MSG_TRACKED_POSE = 10;
   MSG_WHEEL_HARDWARE_STATE = 11;
-  MSG_SCAN_MATCHED_POINTS_FRAGMENT = 12;
 }
 ```
 
@@ -152,12 +153,18 @@ Envelope env;
 env.set_type(MSG_IMU);
 env.set_sequence(++seq);
 imu.SerializeToString(env.mutable_payload());
-std::string wire = env.SerializeAsString();
 
-// 2. 添加帧头（magic + CRC-16）
-uint16_t crc = crc16(wire.data(), wire.size());
-// 组装发送缓冲区：[magic(2)][crc(2)][wire(varlen)]
-// sendto() 到多播地址
+// 2. 一次性分配完整缓冲区：[magic(2)][crc(2)][Envelope(变长)]
+size_t env_size = env.ByteSizeLong();
+std::vector<uint8_t> frame(4 + env_size);
+frame[0] = 0xAB;
+frame[1] = 0x01;
+env.SerializeToArray(frame.data() + 4, env_size);
+
+uint16_t crc = crc16(frame.data() + 4, env_size);
+frame[2] = static_cast<uint8_t>(crc >> 8);
+frame[3] = static_cast<uint8_t>(crc & 0xFF);
+// sendto(frame.data(), frame.size()) 到多播地址
 ```
 
 具体消息定义（Proto3 示例）：
@@ -227,9 +234,18 @@ env.set_type(MSG_IMU);
 env.set_sequence(++seq);
 imu.SerializeToString(env.mutable_payload());
 
-// 序列化后直接 sendto() 到多播地址
-std::string wire = env.SerializeAsString();
-sendto(sock, wire.data(), wire.size(), 0, &multicast_addr, sizeof(multicast_addr));
+// 预计算序列化大小，一次性分配完整缓冲区：[magic(2)][crc(2)][Envelope]
+size_t env_size = env.ByteSizeLong();
+std::vector<uint8_t> frame(4 + env_size);
+frame[0] = 0xAB;
+frame[1] = 0x01;
+env.SerializeToArray(frame.data() + 4, env_size);
+
+uint16_t crc = crc16(frame.data() + 4, env_size);
+frame[2] = static_cast<uint8_t>(crc >> 8);
+frame[3] = static_cast<uint8_t>(crc & 0xFF);
+
+sendto(sock, frame.data(), frame.size(), 0, &multicast_addr, sizeof(multicast_addr));
 ```
 
 **接收端（imu_node）：**
@@ -237,9 +253,27 @@ sendto(sock, wire.data(), wire.size(), 0, &multicast_addr, sizeof(multicast_addr
 ```cpp
 char buf[65536];
 ssize_t n = recvfrom(sock, buf, sizeof(buf), 0, nullptr, nullptr);
+if (n < 0) {
+    // 接收错误，略过
+    return;
+}
+
+// 检查 magic 字节
+if (n < 4 || buf[0] != 0xAB || buf[1] != 0x01) {
+    // 非本协议包，直接丢弃
+    return;
+}
+
+// 校验 CRC-16
+uint16_t recv_crc = (static_cast<uint16_t>(buf[2]) << 8) | static_cast<uint16_t>(buf[3]);
+uint16_t calc_crc = crc16(buf + 4, n - 4);
+if (calc_crc != recv_crc) {
+    // CRC 校验失败，丢弃
+    return;
+}
 
 Envelope env;
-env.ParseFromArray(buf, n);
+env.ParseFromArray(buf + 4, n - 4);
 
 if (env.type() == MSG_IMU) {
     Imu imu;
@@ -257,7 +291,7 @@ if (env.type() == MSG_IMU) {
 
 - 每个 UDP 数据报 ≤ 1400 字节（IPv4 多播 MTU 安全阈值，为 IP/UDP 头留出余量）
 - 一个分片 = 一个自描述的 Envelope，包含一组连续的点
-- 接收端按 `sequence` + `fragment` 拼装整帧
+- 接收端按 `scan_sequence` + `fragment_index` 拼装整帧
 
 ### 5.2 分片结构
 
@@ -389,7 +423,7 @@ char buf[65536];
 recvfrom(sock, buf, sizeof(buf), 0, nullptr, nullptr);
 ```
 
-### 7.3 非阻塞接收
+### 7.3 阻塞带超时接收
 
 所有接收端使用单独线程阻塞接收，配合 100ms socket 超时，避免轮询浪费 CPU：
 
@@ -415,7 +449,7 @@ void receiver_thread() {
 
 ---
 
-## 10. 与旧架构对比
+## 8. 与旧架构对比
 
 | 维度             | 旧 (TCP relay)                                                         | 新 (UDP 多播)                   |
 | ---------------- | ---------------------------------------------------------------------- | ------------------------------- |
