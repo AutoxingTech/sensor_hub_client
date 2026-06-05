@@ -21,6 +21,33 @@ flowchart LR
     server -->|"CmdVel(20Hz) TcpRobotControl TF(50Hz)"| client
 ```
 
+### 为什么需要 server？
+
+以 IMU 为例，底盘端通常通过 I2C 直连 IMU 芯片，`imu_node` 直接读取硬件寄存器即可获取数据。但当使用**第三方传感器**时，传感器协议各不相同，无法直接在底盘 Node 中对接。因此引入 relay 架构：
+
+```mermaid
+flowchart LR
+    subgraph 常规路径
+        i2c["I2C 总线"] --> imu_node_drv["imu_node (驱动)"]
+        imu_node_drv --> consumers_n["众多下游消费者"]
+    end
+```
+
+```mermaid
+flowchart LR
+    subgraph 第三方传感器路径
+        sensor["第三方 IMU"] --> client2["sensor_hub_client"]
+        client2 -->|TCP 协议帧| server2["sensor_hub_server"]
+        server2 -->|"/raw_imu"| imu_node_proc["imu_node (处理)"]
+        imu_node_proc --> consumers_p["众多下游消费者"]
+    end
+```
+
+> **关键设计意图**：`sensor_hub_server` 收到数据后，**只转发给唯一的下游处理节点**
+> （如 `imu_node`），而不是广播给所有消费者。`imu_node` 完成数据融合/滤波/标定
+> 等处理后，再由它发布到 ROS 生态中供众多消费者（导航、定位、可视化等）使用。
+> 这保持了原有处理管线不变，server 仅充当“协议适配层”，不参与业务逻辑。
+
 ---
 
 ## 协议格式
