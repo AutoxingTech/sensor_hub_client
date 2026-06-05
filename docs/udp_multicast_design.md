@@ -10,7 +10,7 @@
 ### 1.1 现有架构的问题
 
 <div align="center">
-  <img src="../assets/old_architecture.svg" width="800" alt="Existing TCP relay architecture">
+  <img src="../assets/old_architecture.svg" alt="Existing TCP relay architecture">
 </div>
 
 - **双重单点故障 (Double SPOFs) 与断流风险**：IPC 端的 `sensor_hub_server` 和底盘端的 `sensor_hub_client` 均为单点故障瓶颈。任何一端或连接崩溃，整个上下行通路即刻瘫痪。
@@ -21,7 +21,7 @@
 ### 1.2 简化路径
 
 <div align="center">
-  <img src="../assets/new_architecture.svg" width="800" alt="New UDP multicast architecture">
+  <img src="../assets/new_architecture.svg" alt="New UDP multicast architecture">
 </div>
 
 新架构去除了集中式中继的 TCP `sensor_hub_server` (IPC 端) 以及集中的代理 `sensor_hub_client` (底盘端)，从源头上彻底消除双重单点故障：
