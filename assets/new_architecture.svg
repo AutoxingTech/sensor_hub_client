@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Arrow Markers -->
+    <marker id="arrow-green" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#7b1fa2"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#e65100"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="900" height="280" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- title -->
+  <text x="450" y="24" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="bold">新架构 — UDP 多播直连 (网线直连)</text>
+
+  <!-- ===== 工控机 (IPC) Subsystem Container ===== -->
+  <rect x="30" y="38" width="840" height="72" rx="6" fill="#fcfcfc" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="42" y="52" font-size="11" fill="#455a64" font-weight="bold">工控机 (IPC)</text>
+
+  <!-- Inside IPC - Node 1: Each Sensor Processing Node -->
+  <rect x="50" y="58" width="260" height="42" rx="6" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="180" y="75" text-anchor="middle" font-size="11" fill="#1565c0" font-weight="bold">各传感器处理 Node (imu_node等)</text>
+  <text x="180" y="90" text-anchor="middle" font-size="9" fill="#1565c0">直接绑定端口接收 (239.0.0.1:9001-9099)</text>
+
+  <!-- Inside IPC - Node 2: Downstream Consumers -->
+  <rect x="370" y="58" width="270" height="42" rx="6" fill="#f3e5f5" stroke="#ab47bc" stroke-width="1.5"/>
+  <text x="505" y="75" text-anchor="middle" font-size="11" fill="#6a1b9a" font-weight="bold">众多下游消费者</text>
+  <text x="505" y="90" text-anchor="middle" font-size="9" fill="#6a1b9a">标准 ROS 话题订阅 (SLAM / 定位 / 规划)</text>
+
+  <!-- Inside IPC - Node 3: ctrl_node -->
+  <rect x="700" y="58" width="150" height="42" rx="6" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="775" y="75" text-anchor="middle" font-size="11" fill="#e65100" font-weight="bold">ctrl_node (控制发布)</text>
+  <text x="775" y="90" text-anchor="middle" font-size="9" fill="#e65100">发至多播 239.0.0.2:9101-9199</text>
+
+
+  <!-- ===== Network Medium Layer ===== -->
+  <!-- Stylized ethernet cable bar -->
+  <rect x="30" y="118" width="840" height="32" rx="4" fill="#eceff1" stroke="#b0bec5" stroke-width="1.5"/>
+  <text x="450" y="138" text-anchor="middle" font-size="12" fill="#37474f" font-weight="bold">物理网线直连 双向 UDP 多播 (丢包率 ≈ 0)</text>
+
+
+  <!-- ===== 底盘 (Chassis) Container ===== -->
+  <rect x="30" y="160" width="840" height="78" rx="6" fill="#f5fdf5" stroke="#a5d6a7" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="42" y="174" font-size="11" fill="#2e7d32" font-weight="bold">底盘 (Chassis)</text>
+
+  <!-- Inside Chassis - Box 1: 各独立硬件直发单元 (IMU/激光雷达/轮速等) -->
+  <rect x="50" y="180" width="360" height="46" rx="6" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.5"/>
+  <text x="230" y="198" text-anchor="middle" font-size="11.5" fill="#2e7d32" font-weight="bold">各独立传感器硬件/直发单元 (IMU、雷达等)</text>
+  <text x="230" y="213" text-anchor="middle" font-size="8" fill="#388e3c">设备独立 Protobuf 序列化多播发送 (239.0.0.1:9001-9004 端口物理隔离 号段 9001-9099)</text>
+
+  <!-- Inside Chassis - Box 2: 控制指令接收器 -->
+  <rect x="490" y="180" width="360" height="46" rx="6" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="670" y="198" text-anchor="middle" font-size="12" fill="#e65100" font-weight="bold">底盘控制/状态执行单元</text>
+  <text x="670" y="213" text-anchor="middle" font-size="9" fill="#f57c00">监听多播端口 239.0.0.2:9101-9102 (号段 9101-9199) → 接收/解析控制多播帧并执行</text>
+
+
+  <!-- ===== Arrows & Routing (NO text overlapping the lines) ===== -->
+
+  <!-- Green: Upward from Chassis (sensor_hub_client) to Network Medium -->
+  <line x1="230" y1="180" x2="230" y2="154" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <!-- Label correctly shifted right of the line with no border box -->
+  <text x="238" y="167" font-size="8.5" fill="#2e7d32" font-weight="bold">多播隔离上报 (Port 9001-9099)</text>
+
+  <!-- Green: Multicast distribution upward from Network to IPC Sensor Nodes -->
+  <line x1="180" y1="118" x2="180" y2="104" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <text x="188" y="113" font-size="8.5" fill="#1565c0" font-weight="bold">内核级端口过滤分发</text>
+
+  <!-- Purple: Standard ROS Topic transmission from Sensor Nodes to Downstream Consumers -->
+  <line x1="310" y1="79" x2="364" y2="79" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+  <text x="337" y="71" text-anchor="middle" font-size="8" fill="#7b1fa2" font-weight="bold">ROS 话题</text>
+
+  <!-- Orange: Control flow from Downstream Consumers to ctrl_node -->
+  <line x1="640" y1="79" x2="694" y2="79" stroke="#e65100" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <text x="667" y="71" text-anchor="middle" font-size="8" fill="#e65100" font-weight="bold">控制流</text>
+
+  <!-- Orange: Downward from IPC (ctrl_node) to Network Medium -->
+  <line x1="775" y1="100" x2="775" y2="114" stroke="#e65100" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <text x="655" y="111" font-size="8.5" fill="#e65100" font-weight="bold">多播群发 (Port 9101/9102)</text>
+
+  <!-- Orange: Downward from Network Medium to Chassis command receiver -->
+  <line x1="670" y1="150" x2="670" y2="176" stroke="#e65100" stroke-width="1.8" marker-end="url(#arrow-orange)"/>
+  <text x="595" y="167" font-size="8.5" fill="#e65100" font-weight="bold">接收控制指令</text>
+
+
+  <!-- ===== Bottom Advantage Summary ===== -->
+  <rect x="30" y="248" width="840" height="20" rx="3" fill="#e8f5e9"/>
+  <text x="450" y="262" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="bold">优势：无单点故障 · 端到端极低时延 · 消除 TCP 队头阻塞 · 极简的无连接管理模型</text>
+</svg>

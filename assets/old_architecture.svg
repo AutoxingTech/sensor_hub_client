@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Arrow Markers -->
+    <marker id="arrow-blue" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#f57c00"/>
+    </marker>
+    <marker id="arrow-pink" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#ec407a"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#4caf50"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <path d="M0,0 L6,2.5 L0,5 Z" fill="#7b1fa2"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="900" height="280" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- title -->
+  <text x="450" y="24" text-anchor="middle" font-size="14" fill="#37474f" font-weight="bold">现有架构 (TCP Relay 转发)</text>
+
+  <!-- ======= 工控机 (IPC) Container ======= -->
+  <rect x="30" y="38" width="840" height="72" rx="6" fill="#fcfcfc" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="42" y="52" font-size="11" fill="#455a64" font-weight="bold">工控机 (IPC)</text>
+
+  <!-- Inside IPC - Slot 1: sensor_hub_server -->
+  <rect x="50" y="58" width="160" height="42" rx="6" fill="#fce4ec" stroke="#ec407a" stroke-width="1.5"/>
+  <text x="130" y="79" text-anchor="middle" font-size="12" fill="#c2185b" font-weight="bold">sensor_hub_server</text>
+  <text x="130" y="92" text-anchor="middle" font-size="8" fill="#c2185b">(TCP 中转服务)</text>
+
+  <!-- Inside IPC - Slot 2: 各传感器处理 Node -->
+  <rect x="240" y="58" width="230" height="42" rx="6" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.5"/>
+  <text x="355" y="74" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="bold">各传感器处理 Node (imu_node等)</text>
+  <text x="355" y="89" text-anchor="middle" font-size="9" fill="#388e3c">(滤波 / 融合 / 标定 / 畸变校正等)</text>
+
+  <!-- Inside IPC - Slot 3: 众多下游消费者 -->
+  <rect x="500" y="58" width="170" height="42" rx="6" fill="#f3e5f5" stroke="#ab47bc" stroke-width="1.5"/>
+  <text x="585" y="74" text-anchor="middle" font-size="11" fill="#6a1b9a" font-weight="bold">众多下游消费者</text>
+  <text x="585" y="89" text-anchor="middle" font-size="9" fill="#7b1fa2">(SLAM / 定位 / 规划等)</text>
+
+  <!-- Inside IPC - Slot 4: ctrl_node -->
+  <rect x="700" y="58" width="150" height="42" rx="6" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="775" y="74" text-anchor="middle" font-size="11" fill="#e65100" font-weight="bold">ctrl_node (控制发布)</text>
+  <text x="775" y="89" text-anchor="middle" font-size="9" fill="#e65100">生成并发布控制指令</text>
+
+
+  <!-- ===== Network Medium Layer ===== -->
+  <!-- Stylized TCP/IP routing medium bar to mirror new_architecture layout -->
+  <rect x="30" y="118" width="840" height="32" rx="4" fill="#eceff1" stroke="#b0bec5" stroke-width="1.5"/>
+  <text x="450" y="138" text-anchor="middle" font-size="12" fill="#37474f" font-weight="bold">局域网网络 (TCP 单点长连接栈)</text>
+
+
+  <!-- ===== 底盘 (Chassis) Container ===== -->
+  <rect x="30" y="160" width="840" height="78" rx="6" fill="#f5fafd" stroke="#b3e5fc" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="42" y="174" font-size="11" fill="#0288d1" font-weight="bold">底盘 (Chassis)</text>
+
+  <!-- Inside Chassis - Box 1: sensor_hub_client -->
+  <rect x="50" y="180" width="360" height="46" rx="6" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="230" y="198" text-anchor="middle" font-size="12" fill="#e65100" font-weight="bold">sensor_hub_client (采集上报)</text>
+  <text x="230" y="213" text-anchor="middle" font-size="9" fill="#e65100">建立并维持 TCP 长连接，上报传感器协议封装与分包</text>
+
+  <!-- Inside Chassis - Box 2: 控制指令接收器 -->
+  <rect x="490" y="180" width="360" height="46" rx="6" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="670" y="198" text-anchor="middle" font-size="12" fill="#e65100" font-weight="bold">控制指令接收器 (执行底盘驱动)</text>
+  <text x="670" y="213" text-anchor="middle" font-size="9" fill="#f57c00">接收 TCP 下发的控制帧并执行，底盘轮速控制、安全限制与急停</text>
+
+
+  <!-- ===== Arrows & Routing (NO text on top of arrow lines) ===== -->
+
+  <!-- 1. sensor_hub_client uploads to Network -->
+  <line x1="140" y1="180" x2="140" y2="154" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arrow-orange)"/>
+  <text x="146" y="167" font-size="8.5" fill="#e65100" font-weight="bold">TCP 上报</text>
+
+  <!-- 2. Network UP to Server -->
+  <line x1="130" y1="118" x2="130" y2="104" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arrow-orange)"/>
+  <text x="136" y="113" font-size="8.5" fill="#e65100" font-weight="bold">TCP 接收</text>
+
+  <!-- 3. Server to Sensor Node -->
+  <line x1="210" y1="79" x2="234" y2="79" stroke="#ec407a" stroke-width="1.5" marker-end="url(#arrow-pink)"/>
+
+  <!-- 4. Sensor Nodes to Consumers -->
+  <line x1="470" y1="79" x2="494" y2="79" stroke="#4caf50" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <!-- 5. Consumers command to ctrl_node -->
+  <line x1="670" y1="79" x2="694" y2="79" stroke="#7b1fa2" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+  <!-- 6. Control flow down: ctrl_node to Network (via Server logically) -->
+  <line x1="775" y1="100" x2="775" y2="114" stroke="#e65100" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <text x="685" y="112" font-size="8.5" fill="#e65100" font-weight="bold">ROS 发送至 Server</text>
+
+  <!-- 7. Network back down to Client -->
+  <line x1="320" y1="150" x2="320" y2="176" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arrow-orange)"/>
+  <text x="328" y="167" font-size="8.5" fill="#e65100" font-weight="bold">TCP 下发控制</text>
+
+  <!-- 8. Client to Executor -->
+  <line x1="410" y1="203" x2="484" y2="203" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arrow-orange)"/>
+  <text x="418" y="195" font-size="8.5" fill="#e65100" font-weight="bold">串口下发</text>
+
+
+  <!-- ======= Problems Section ======= -->
+  <rect x="30" y="244" width="840" height="24" rx="4" fill="#fff1f0" stroke="#ffa39e" stroke-width="1"/>
+  <text x="450" y="260" text-anchor="middle" font-size="10" fill="#c62828" font-weight="bold">痛点：双重单点故障点 (TCP Server/Client均为 SPOF) · 链路极冗长，链路中任何一环断线即失控</text>
+</svg>
